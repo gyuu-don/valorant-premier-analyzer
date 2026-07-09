@@ -109,15 +109,15 @@ npm run dev          # runs FastAPI + Vite together
 
 | Page | Content |
 |---|---|
-| **Overview** | Record, recent form, **advanced team MVP** card, attack/defense & economy win rates |
-| **Players** | ACS, K/D, ADR, KAST%, HS%, multikills, clutches + a per-player radar |
-| **Maps & Agents** | Per-map win rate + attack/defense round split, agent usage |
-| **Gameplay** | Gameplay stats, entry duels, trades, holds/retakes, post-plant |
-| **Match Analysis** | Scoreboard (click a player) + per-player game breakdown, match-scoped Advanced Team MVP, round-by-round timeline |
+| **Overview** | Team record & recent form, situational & timing stats (first-blood/clutch/pistol rates, plant timing), attack/defense & economy win rates — with stage-over-stage change arrows |
+| **Players** | The **Advanced Team MVP** widget, roster stats (ACS, K/D, ADR, KAST%, HS%, multikills, clutches) with player banners, and a per-player profile (radar + agents played) |
+| **Maps & Agents** | Selectable per-map performance driving a cumulative kill/death heatmap on the minimap, plus per-map agent usage |
+| **Gameplay** | Coaching summary (benchmarked vs the opponents faced), entry duels, trades (overall, per-player, and by game state), retakes & post-plant |
+| **Match Analysis** | Per-match sub-tabs — scoreboard, per-player breakdown (agent, stats, utility usage), match-scoped Team MVP, positional heatmap, spike-site detail — plus a round-by-round timeline |
 
 ### Global stage filter
-- A **stage dropdown in the header** scopes *every* page (Overview, Players, Maps, Tactical,
-  Match Analysis) to a single Premier stage — e.g. `E11A4 · Jun 23 – Aug 18, 2026`. Stages
+- A **stage dropdown in the header** scopes *every* page (Overview, Players, Maps & Agents,
+  Gameplay, Match Analysis) to a single Premier stage — e.g. `E11A4 · Jun 23 – Aug 18, 2026`. Stages
   come from the HenrikDev seasons endpoint (only those your team has matches in are shown),
   and filtering is done by each stage's date window. Defaults to the current stage; pick
   "All stages" to analyze everything. Backend: `GET /api/stages` + a `season` query param on
@@ -125,16 +125,20 @@ npm run dev          # runs FastAPI + Vite together
 
 ### Advanced metrics
 - **Opponent-relative baseline** — the app also analyzes the opponents you actually
-  faced and benchmarks your tactical metrics against them ("you 48% vs opponents 52%").
+  faced and benchmarks your gameplay metrics against them ("you 48% vs opponents 52%").
   Callouts flag only where you trail *your own division*, so a low absolute number that's
   normal for the division isn't misreported as a weakness. Great for lower divisions where
   pro-level benchmarks don't apply.
-- **Advanced team MVP** — a composite *impact rating* (ACS, KAST, entry win rate, trade
-  contribution, multikills, clutches, ADR; min-max normalized across the roster and
-  weighted in `server/app/config.py`). Riot's raw-score MVP is shown alongside for contrast.
+- **Advanced team MVP** — on the **Players** tab, a composite *impact rating* (KAST, entry
+  win rate, ADR, trade contribution, multikills, clutches, ACS; min-max normalized across
+  the roster and weighted in `server/app/config.py`). Alongside it: which player earned the
+  game-determined (in-game) MVP most often, and how often that differed from the advanced MVP.
+- **Stage-over-stage deltas** — when a specific stage is selected, percentage stats across
+  the app show a green/amber/red ▲ / ＝ / ▼ vs. the previous stage (hover for the exact change).
 - **Attack/defense split** — round win rate by side + eco/force/full-buy win rates.
 - **Entries / trades / site play** — opening-duel win %, deaths-traded %, defense
-  holds vs retakes, attack post-plant conversion. Side per round is inferred from spike
+  holds vs retakes, attack post-plant conversion; trades are also split by game state
+  (attack pre/post-plant, defense hold/retake). Side per round is inferred from spike
   plant events + the standard 12/12 half structure.
 - **Per-match player breakdown** — clicking a scoreboard player on the Match Analysis tab
   opens a card with their agent (icon), that game's ACS/ADR/HS%/KAST/first-bloods/clutches,
@@ -152,19 +156,20 @@ npm run dev          # runs FastAPI + Vite together
 ## API limitations (read me)
 
 - **No official Premier data.** Everything Premier-specific comes from HenrikDev.
-- **Utility "effectiveness" is a proxy.** The match payload exposes ability casts only as
-  per-match *aggregate* counts and does not timestamp casts against kills. The utility page
-  reports **casts-per-round** and **assists-per-round** as proxies for utility impact — not
-  a precise "utility that was followed up on" causation metric. This is labeled in the UI.
+- **Utility is usage-only.** The match payload exposes ability casts only as per-match
+  *aggregate* counts with no timestamps, so casts can't be tied to kills. On the Match
+  Analysis player card, utility is shown as **casts-per-round per ability** (mapped to each
+  agent's real ability names/icons via valorant-api.com) — not an "impact"/"followed-up"
+  causation metric. This is noted in the UI.
 - **Clutches / side inference are heuristics** derived from kill order and plant events,
   not explicit API fields.
 - **Roster source:** the `/premier/{name}/{tag}` endpoint often returns an empty roster,
   so the app identifies your team inside each match via `teams[].premier_roster.id` and
   reads the participating PUUIDs from there — no manual roster entry needed.
 - **Analyzed record vs official standing:** the "Record (N analyzed)" card counts the
-  league matches actually pulled and analyzed (there can be several per Premier match
-  night). Your **official Premier standing** (W–L, division, points) is shown separately
-  in the header. These two numbers are expected to differ.
+  matches actually pulled and analyzed — both league and playoff/tournament matches, and
+  there can be several per Premier match night. Your **official Premier standing** (W–L,
+  division, points) is shown separately in the header. These two numbers are expected to differ.
 - **Field names:** the analytics key off `server/app/models.py`. If HenrikDev changes its
   v4 schema, adjust the models there (confirm against a live sample or the OpenAPI spec at
   <https://api.henrikdev.xyz/docs>). Models are defensive (`extra="ignore"`, optional
