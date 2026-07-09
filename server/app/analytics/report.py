@@ -1,7 +1,7 @@
 """Aggregate a set of matches into a full team report + plain-language coaching callouts."""
 from __future__ import annotations
 
-from app.analytics.common import build_context
+from app.analytics.common import build_context, pct
 from app.analytics.entries import compute_entries
 from app.analytics.maps import compute_maps
 from app.analytics.mvp import compute_mvp
@@ -117,6 +117,47 @@ def build_match_summaries(team: PremierTeam, matches: list[MatchV4]) -> list[dic
     return out
 
 
+def compute_mvp_awards(contexts, window: int) -> dict:
+    """Per-match MVP awards across the stage: who most often earned the game-determined
+    MVP (top combat score on our team), and how often the Advanced MVP (impact rating)
+    disagreed with it."""
+    game_counts: dict[str, dict] = {}
+    differed = 0
+    matches = 0
+
+    for ctx in contexts:
+        data = all_breakdowns([ctx], window)
+        players = compute_players(data)
+        if not players:
+            continue
+        matches += 1
+        m = compute_mvp(players, compute_entries(data), compute_trades(data))
+        advanced = m["ranking"][0]["puuid"] if m["ranking"] else None
+        game = m["official_mvp"]["puuid"] if m["official_mvp"] else None
+        if game:
+            gc = game_counts.setdefault(game, {"name": players[game]["name"], "count": 0})
+            gc["count"] += 1
+        if game and advanced and game != advanced:
+            differed += 1
+
+    leader = max(game_counts.items(), key=lambda kv: kv[1]["count"], default=None)
+    return {
+        "matches": matches,
+        "most_game_mvp": (
+            {
+                "puuid": leader[0],
+                "name": leader[1]["name"],
+                "count": leader[1]["count"],
+                "pct": pct(leader[1]["count"], matches),
+            }
+            if leader
+            else None
+        ),
+        "differed": differed,
+        "differed_pct": pct(differed, matches),
+    }
+
+
 def _tactical_summary(contexts, window: int) -> dict:
     """Compute the tactical metrics used for the opponent baseline comparison."""
     data = all_breakdowns(contexts, window)
@@ -165,6 +206,7 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
     utility = compute_utility(data)
     maps = compute_maps(contexts)
     mvp = compute_mvp(players, entries, trades)
+    mvp["awards"] = compute_mvp_awards(contexts, window)
 
     # Opponent baseline ("the division you actually play").
     baseline = _tactical_summary(opp_contexts, window) if opp_contexts else None

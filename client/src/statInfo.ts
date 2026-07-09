@@ -112,6 +112,16 @@ export const STAT_INFO: Record<string, StatDef> = {
     desc: "Composite 0–100 rating blending ACS, KAST, entry win rate, trade contribution, multikills, clutches and ADR — each normalized across the roster and weighted. See the Advanced Team MVP explainer.",
   },
 
+  // MVP awards (season/stage, per-match)
+  most_game_mvp: {
+    label: "Most in-game MVPs",
+    desc: "The player who most often earned your team's in-game MVP (highest combat score) across the matches this stage, shown as a share of matches.",
+  },
+  mvp_disagreement: {
+    label: "Advanced vs in-game MVP differ",
+    desc: "How often the Advanced Team MVP (impact rating) was a DIFFERENT player than the game-determined MVP (top combat score), across this stage's matches. Higher means raw score and all-round impact often disagree.",
+  },
+
   // Team-level
   record: { label: "Record", desc: "Wins–losses across the matches analyzed (differs from the official Premier standing)." },
   recent_form: { label: "Recent form", desc: "Recent match results, ordered oldest → most recent (newest is marked)." },

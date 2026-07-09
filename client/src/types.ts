@@ -39,6 +39,7 @@ export interface MatchPlayerAnalysis {
   kills: number;
   deaths: number;
   assists: number;
+  score: number;
   acs: number;
   adr: number;
   kd: number;
@@ -177,6 +178,12 @@ export interface Report {
     weights?: Record<string, number>;
     weight_total?: number;
     method?: string;
+    awards?: {
+      matches: number;
+      most_game_mvp: { puuid: string; name: string; count: number; pct: number } | null;
+      differed: number;
+      differed_pct: number;
+    };
   };
   baseline?: Baseline | null;
   callouts?: Callout[];

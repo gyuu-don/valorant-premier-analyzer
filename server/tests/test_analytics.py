@@ -171,6 +171,17 @@ def test_match_analysis_positions_and_sites(match):
     assert st["retake_sites"] == {}     # both rounds were attack side
 
 
+def test_mvp_awards(context):
+    from app.analytics.report import compute_mvp_awards
+
+    a = compute_mvp_awards([context], 4000)
+    assert a["matches"] == 1
+    # p1 has the top combat score on our team -> game MVP.
+    assert a["most_game_mvp"]["puuid"] == "p1"
+    assert a["most_game_mvp"]["pct"] == 100.0
+    assert 0.0 <= a["differed_pct"] <= 100.0
+
+
 def test_build_report(team, match):
     report = build_report(team, [match])
     assert report["matches_analyzed"] == 1

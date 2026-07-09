@@ -68,11 +68,22 @@ export default function Overview() {
               <div className="stat-label">Impact rating (0–100)</div>
             </div>
             <div className="mvp-compare">
-              <p>
-                Riot in-game (raw score) MVP:{" "}
-                <strong>{mvp.official_mvp?.name}</strong>{" "}
-                <span className="subtle">({mvp.official_mvp?.score} pts)</span>
-              </p>
+              {mvp.awards?.most_game_mvp && (
+                <p>
+                  <InfoLabel k="most_game_mvp">Most in-game MVPs</InfoLabel>:{" "}
+                  <strong>{mvp.awards.most_game_mvp.name}</strong>{" "}
+                  <span className="subtle">
+                    {mvp.awards.most_game_mvp.pct}% of matches ({mvp.awards.most_game_mvp.count}/{mvp.awards.matches})
+                  </span>
+                </p>
+              )}
+              {mvp.awards && (
+                <p>
+                  <InfoLabel k="mvp_disagreement">Advanced vs in-game MVP differ</InfoLabel>:{" "}
+                  <strong>{mvp.awards.differed_pct}%</strong>{" "}
+                  <span className="subtle">({mvp.awards.differed}/{mvp.awards.matches} matches)</span>
+                </p>
+              )}
               <MvpRanking ranking={mvp.ranking} weights={mvp.weights} weightTotal={mvp.weight_total} />
             </div>
           </div>

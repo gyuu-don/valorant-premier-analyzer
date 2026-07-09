@@ -154,6 +154,11 @@ function MatchView({ data }: { data: any }) {
   const ourTeamRanking = (analysis?.mvp?.ranking ?? []).filter(
     (r) => byPuuid.get(r.puuid)?.team === analysis?.our_team_id
   );
+  // The game-determined MVP for our team = highest combat score (Riot's in-game basis).
+  const ourAnalysisPlayers = (analysis?.players ?? []).filter((p) => p.team === analysis?.our_team_id);
+  const gameMvp = ourAnalysisPlayers.length
+    ? ourAnalysisPlayers.reduce((a, b) => (b.score > a.score ? b : a))
+    : null;
   const defaultPuuid = ourTeamRanking[0]?.puuid ?? players[0]?.puuid ?? null;
   const [sel, setSel] = useState<string | null>(null);
   const selectedPuuid = sel ?? defaultPuuid;
@@ -245,6 +250,13 @@ function MatchView({ data }: { data: any }) {
 
       {tab === "mvp" && ourTeamRanking.length > 0 && (
         <Section title="Advanced Team MVP — this match" note="Impact rating computed from this game only, normalized across the lobby.">
+          {gameMvp && (
+            <div className="game-mvp">
+              <span className="game-mvp-label">In-game MVP (top combat score)</span>
+              <span className="game-mvp-name">{gameMvp.name}</span>
+              <span className="subtle">{gameMvp.acs} ACS · {gameMvp.kills}/{gameMvp.deaths}/{gameMvp.assists}</span>
+            </div>
+          )}
           <MvpRanking
             ranking={ourTeamRanking}
             weights={analysis?.mvp?.weights}
