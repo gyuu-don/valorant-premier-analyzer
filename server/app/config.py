@@ -59,14 +59,16 @@ class Settings(BaseSettings):
 # then scaled to a 0..100 rating. Weights need not sum to 1 (they are re-normalized
 # in mvp.py), but keeping them ~1.0 makes them easy to reason about.
 # ---------------------------------------------------------------------------
+# Ordered greatest → least; this order also drives the display order of the component
+# breakdown everywhere (the client iterates the weights object's keys).
 MVP_WEIGHTS: dict[str, float] = {
-    "acs": 0.30,            # average combat score per round
-    "kast": 0.20,          # kill/assist/survive/trade consistency
-    "entry_win_rate": 0.15,  # opening-duel success
-    "trade_contribution": 0.10,  # trades secured minus own untraded deaths
-    "multikills": 0.10,    # 2k+ rounds
-    "clutches": 0.10,      # last-alive round wins
-    "adr": 0.05,           # average damage per round
+    "kast": 0.22,                # kill/assist/survive/trade consistency
+    "entry_win_rate": 0.18,      # opening-duel success
+    "adr": 0.15,                 # average damage per round
+    "trade_contribution": 0.15,  # trades secured minus own untraded deaths
+    "multikills": 0.10,          # 2k+ rounds
+    "clutches": 0.10,            # last-alive round wins
+    "acs": 0.10,                 # average combat score per round
 }
 
 

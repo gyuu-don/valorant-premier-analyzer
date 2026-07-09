@@ -2,14 +2,15 @@ import { InfoLabel, Section, WinRateBar } from "./common";
 import { playerCardImage } from "../media";
 import type { MvpEntry, Report } from "../types";
 
+// Ordered greatest → least by weight (matches config.MVP_WEIGHTS).
 export const COMPONENT_LABELS: Record<string, string> = {
-  acs: "ACS",
   kast: "KAST",
   entry_win_rate: "Entry win %",
+  adr: "ADR",
   trade_contribution: "Trade contribution",
   multikills: "Multikills",
   clutches: "Clutches",
-  adr: "ADR",
+  acs: "ACS",
 };
 
 // A single impact-rating bar with a hover tooltip showing the exact calculation.
@@ -138,7 +139,10 @@ export function MvpExplainer({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
             <h4>Component weights</h4>
             <ul className="weight-list">
               {rows.map((r) => (
-                <li key={r.k}><span>{r.label}</span><span>{pctWeight(r.weight)}%</span></li>
+                <li key={r.k}>
+                  <span><InfoLabel k={r.k}>{r.label}</InfoLabel></span>
+                  <span>{pctWeight(r.weight)}%</span>
+                </li>
               ))}
             </ul>
           </div>

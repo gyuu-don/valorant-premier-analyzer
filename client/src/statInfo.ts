@@ -107,6 +107,10 @@ export const STAT_INFO: Record<string, StatDef> = {
   games: { label: "Games", desc: "Number of matches played." },
 
   // MVP / impact
+  trade_contribution: {
+    label: "Trade contribution",
+    desc: "A net trading value used in the impact rating (per round): trade kills you secured minus your tradeable deaths that went un-traded. Rewards avenging teammates and not dying un-traded.",
+  },
   impact_rating: {
     label: "Impact",
     desc: "Composite 0–100 rating blending ACS, KAST, entry win rate, trade contribution, multikills, clutches and ADR — each normalized across the roster and weighted. See the Advanced Team MVP explainer.",
@@ -133,7 +137,7 @@ export const STAT_INFO: Record<string, StatDef> = {
   },
   fb_conceded_recovery: {
     label: "FB-conceded recovery",
-    desc: "Of rounds where your team CONCEDED the opening kill (died first), the share you still won — a resilience measure.",
+    desc: "Of rounds where your team CONCEDED the opening kill (died first), the share you still won.",
   },
   rwr_1v1: {
     label: "1v1 RWR",
