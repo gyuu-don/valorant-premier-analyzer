@@ -280,6 +280,24 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 .explainer-note { color: var(--muted); }
 @media (max-width: 760px) { .explainer-cols { grid-template-columns: 1fr; } }
 
+/* Stat definition tooltip (table headers, stat labels, etc.). */
+.info-label {
+  position: relative; cursor: help; outline: none;
+  border-bottom: 1px dotted currentColor;
+}
+.info-label > .info-tip {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
+  width: max-content; max-width: 300px; text-align: left; white-space: normal;
+  background: #0b0d11; border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  font-weight: 400; text-transform: none; letter-spacing: normal; color: var(--text);
+}
+.info-label:hover > .info-tip,
+.info-label:focus > .info-tip,
+.info-label:focus-within > .info-tip { display: block; }
+.info-tip-title { display: block; font-weight: 700; margin-bottom: 4px; font-size: 1rem; }
+.info-tip-desc { display: block; color: var(--muted); font-size: 1rem; line-height: 1.5; }
+
 /* Match Analysis player card. */
 .player-card { display: flex; flex-direction: column; gap: 20px; }
 .pc-header { display: flex; align-items: center; gap: 16px; }

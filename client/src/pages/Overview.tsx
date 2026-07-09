@@ -1,5 +1,6 @@
 import { useReport } from "../hooks";
-import { ErrorBox, Loading, Section, StatCard, WinRateBar } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, StatCard, WinRateBar } from "../components/common";
+import type { ReactNode } from "react";
 import type { Report } from "../types";
 import { COMPONENT_LABELS, MvpRanking } from "../components/mvp";
 
@@ -36,19 +37,19 @@ export default function Overview() {
 
       <div className="stat-grid">
         <StatCard
-          label={`Record (${data.matches_analyzed} analyzed)`}
+          label={<InfoLabel k="record">{`Record (${data.matches_analyzed} analyzed)`}</InfoLabel>}
           value={`${record?.wins}–${record?.losses}`}
           sub={`${wr}% win rate`}
           tone={wr >= 50 ? "good" : "bad"}
         />
-        <StatCard label="Attack RWR" value={`${sides?.attack_win_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="attack_win_rate">Attack RWR</InfoLabel>} value={`${sides?.attack_win_rate ?? 0}%`}
           sub={`${sides?.attack_rounds ?? 0} rounds`}
           tone={(sides?.attack_win_rate ?? 0) >= 50 ? "good" : "bad"} />
-        <StatCard label="Defense RWR" value={`${sides?.defense_win_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="defense_win_rate">Defense RWR</InfoLabel>} value={`${sides?.defense_win_rate ?? 0}%`}
           sub={`${sides?.defense_rounds ?? 0} rounds`}
           tone={(sides?.defense_win_rate ?? 0) >= 50 ? "good" : "bad"} />
         <StatCard
-          label="Recent form"
+          label={<InfoLabel k="recent_form">Recent form</InfoLabel>}
           value={<RecentForm form={(recent_form ?? []).slice(-10)} />}
           sub={
             (recent_form?.length ?? 0) > 0 ? (
@@ -81,11 +82,11 @@ export default function Overview() {
 
       <Section title="Side & economy win rates">
         <div className="bars">
-          <LabeledBar label="Attack" pct={sides?.attack_win_rate ?? 0} />
-          <LabeledBar label="Defense" pct={sides?.defense_win_rate ?? 0} />
+          <LabeledBar label={<InfoLabel k="attack_win_rate">Attack</InfoLabel>} pct={sides?.attack_win_rate ?? 0} />
+          <LabeledBar label={<InfoLabel k="defense_win_rate">Defense</InfoLabel>} pct={sides?.defense_win_rate ?? 0} />
           {sides &&
             Object.entries(sides.economy).map(([bucket, v]) => (
-              <LabeledBar key={bucket} label={bucket.replace("_", " ")} pct={v.win_rate} extra={`${v.rounds} rds`} />
+              <LabeledBar key={bucket} label={<InfoLabel k={bucket}>{bucket.replace("_", " ")}</InfoLabel>} pct={v.win_rate} extra={`${v.rounds} rds`} />
             ))}
         </div>
       </Section>
@@ -93,7 +94,7 @@ export default function Overview() {
   );
 }
 
-function LabeledBar({ label, pct, extra }: { label: string; pct: number; extra?: string }) {
+function LabeledBar({ label, pct, extra }: { label: ReactNode; pct: number; extra?: string }) {
   return (
     <div className="labeled-bar">
       <div className="lb-label">

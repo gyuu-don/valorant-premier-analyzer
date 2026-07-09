@@ -7,6 +7,7 @@ import Tactical from "./pages/Tactical";
 import MatchDetail from "./pages/MatchDetail";
 import { useSeason, stageLabel } from "./season";
 import { useReport } from "./hooks";
+import { StatParamsProvider } from "./statParams";
 
 function bannerStyle(image: string, primary?: string | null): CSSProperties {
   return {
@@ -28,6 +29,7 @@ export default function App() {
   const { data: report } = useReport();
   const team = report?.team;
   return (
+    <StatParamsProvider value={{ tradeWindowMs: report?.trade_window_ms ?? 3000 }}>
     <div className="app">
       {team?.image && (
         <>
@@ -76,5 +78,6 @@ export default function App() {
         Data via the unofficial HenrikDev API · Not affiliated with Riot Games
       </footer>
     </div>
+    </StatParamsProvider>
   );
 }

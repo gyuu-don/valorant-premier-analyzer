@@ -4,7 +4,7 @@ import { fetchMatch, fetchMatches, type MatchSummary } from "../api";
 import { fetchAgents, type AgentInfo } from "../agents";
 import { mapImage } from "../maps";
 import { useSeason } from "../season";
-import { ErrorBox, Loading, Section } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
 import { COMPONENT_LABELS, MvpRanking } from "../components/mvp";
 import type { MatchAnalysis, MatchPlayerAnalysis } from "../types";
 
@@ -155,7 +155,13 @@ function MatchView({ data }: { data: any }) {
       <Section title={`${data.metadata?.map?.name ?? "Match"} — scoreboard`} note="Click a player for their game breakdown.">
         <table className="data-table">
           <thead>
-            <tr><th>Player</th><th>Team</th><th>Agent</th><th>K</th><th>D</th><th>A</th><th>Score</th></tr>
+            <tr>
+              <th>Player</th><th>Team</th><th>Agent</th>
+              <th><InfoLabel k="kills">K</InfoLabel></th>
+              <th><InfoLabel k="deaths">D</InfoLabel></th>
+              <th><InfoLabel k="assists">A</InfoLabel></th>
+              <th><InfoLabel k="score">Score</InfoLabel></th>
+            </tr>
           </thead>
           <tbody>
             {players.map((p: any) => (
@@ -211,15 +217,15 @@ function MatchView({ data }: { data: any }) {
 }
 
 function PlayerCard({ p, agentInfo }: { p: MatchPlayerAnalysis; agentInfo?: AgentInfo }) {
-  const stats: { label: string; value: string | number }[] = [
-    { label: "ACS", value: p.acs },
-    { label: "ADR", value: p.adr },
-    { label: "HS%", value: `${p.hs_pct}%` },
-    { label: "K / D / A", value: `${p.kills} / ${p.deaths} / ${p.assists}` },
-    { label: "KAST", value: `${p.kast}%` },
-    { label: "First bloods", value: p.first_kills },
-    { label: "Multikills", value: p.multikill_rounds },
-    { label: "Clutches", value: p.clutches },
+  const stats: { info: string; label: string; value: string | number }[] = [
+    { info: "acs", label: "ACS", value: p.acs },
+    { info: "adr", label: "ADR", value: p.adr },
+    { info: "hs_pct", label: "HS%", value: `${p.hs_pct}%` },
+    { info: "kda", label: "K / D / A", value: `${p.kills} / ${p.deaths} / ${p.assists}` },
+    { info: "kast", label: "KAST", value: `${p.kast}%` },
+    { info: "first_kills", label: "First bloods", value: p.first_kills },
+    { info: "multikills", label: "Multikills", value: p.multikill_rounds },
+    { info: "clutches", label: "Clutches", value: p.clutches },
   ];
   const maxPr = Math.max(0.01, ...UTIL_SLOTS.map((s) => p.utility.per_round[s.key] ?? 0));
 
@@ -240,7 +246,7 @@ function PlayerCard({ p, agentInfo }: { p: MatchPlayerAnalysis; agentInfo?: Agen
         {p.impact_rating != null && (
           <div className="pc-impact">
             <div className="pc-impact-val">{p.impact_rating}</div>
-            <div className="stat-label">Impact (this game)</div>
+            <div className="stat-label"><InfoLabel k="impact_rating">Impact (this game)</InfoLabel></div>
           </div>
         )}
       </div>
@@ -249,14 +255,14 @@ function PlayerCard({ p, agentInfo }: { p: MatchPlayerAnalysis; agentInfo?: Agen
         {stats.map((s) => (
           <div className="pc-stat" key={s.label}>
             <div className="pc-stat-val">{s.value}</div>
-            <div className="pc-stat-label">{s.label}</div>
+            <div className="pc-stat-label"><InfoLabel k={s.info}>{s.label}</InfoLabel></div>
           </div>
         ))}
       </div>
 
       <div className="pc-sections">
         <div className="pc-section">
-          <h4>Utility usage / round</h4>
+          <h4><InfoLabel k="utility_usage">Utility usage / round</InfoLabel></h4>
           {UTIL_SLOTS.map((s) => {
             const ability = agentInfo?.abilities?.[s.key];
             const val = p.utility.per_round[s.key] ?? 0;
@@ -277,7 +283,7 @@ function PlayerCard({ p, agentInfo }: { p: MatchPlayerAnalysis; agentInfo?: Agen
         </div>
 
         <div className="pc-section">
-          <h4>Impact breakdown (normalized 0–1)</h4>
+          <h4><InfoLabel k="impact_rating">Impact breakdown (normalized 0–1)</InfoLabel></h4>
           <ul className="impact-breakdown">
             {Object.entries(COMPONENT_LABELS).map(([k, label]) => (
               <li key={k}>

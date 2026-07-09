@@ -1,5 +1,5 @@
 import { useReport } from "../hooks";
-import { ErrorBox, Loading, Section, StatCard } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, StatCard } from "../components/common";
 
 export default function Tactical() {
   const { data, isLoading, error } = useReport();
@@ -46,19 +46,24 @@ export default function Tactical() {
       </Section>
 
       <div className="stat-grid">
-        <StatCard label="Opening-duel win rate" value={`${entries?.opening_duel_win_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="opening_duel">Opening-duel win rate</InfoLabel>} value={`${entries?.opening_duel_win_rate ?? 0}%`}
           sub={eGrade.sub || `${entries?.opening_duels ?? 0} duels`} tone={eGrade.tone} />
-        <StatCard label="Deaths traded" value={`${trades?.deaths_traded_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="deaths_traded_rate">Deaths traded</InfoLabel>} value={`${trades?.deaths_traded_rate ?? 0}%`}
           sub={`${tGrade.sub} · ${trades?.untradeable_deaths ?? 0} untradeable excl.`} tone={tGrade.tone} />
-        <StatCard label="Retake success" value={`${sites?.defense.retake_success_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="retake_success">Retake success</InfoLabel>} value={`${sites?.defense.retake_success_rate ?? 0}%`}
           sub={rGrade.sub || `${sites?.defense.retake_opportunities ?? 0} retakes`} tone={rGrade.tone} />
-        <StatCard label="Post-plant conversion" value={`${sites?.attack.post_plant_conversion ?? 0}%`}
+        <StatCard label={<InfoLabel k="post_plant_conversion">Post-plant conversion</InfoLabel>} value={`${sites?.attack.post_plant_conversion ?? 0}%`}
           sub={pGrade.sub || `${sites?.attack.plants ?? 0} plants`} tone={pGrade.tone} />
       </div>
 
       <Section title="Entry duels by player">
         <table className="data-table">
-          <thead><tr><th>Player</th><th>First kills</th><th>First deaths</th><th>Entry win %</th></tr></thead>
+          <thead><tr>
+            <th>Player</th>
+            <th><InfoLabel k="first_kills">First kills</InfoLabel></th>
+            <th><InfoLabel k="first_deaths">First deaths</InfoLabel></th>
+            <th><InfoLabel k="entry_win_rate">Entry win %</InfoLabel></th>
+          </tr></thead>
           <tbody>
             {Object.entries(entries?.per_player ?? {}).map(([puuid, e]) => (
               <tr key={puuid}>
@@ -74,7 +79,14 @@ export default function Tactical() {
 
       <Section title="Trades by player" note="Traded % is over tradeable deaths only — last-man-standing deaths (nobody alive to trade) are excluded.">
         <table className="data-table">
-          <thead><tr><th>Player</th><th>Deaths</th><th>Tradeable</th><th>Deaths traded</th><th>Traded %</th><th>Trade kills</th></tr></thead>
+          <thead><tr>
+            <th>Player</th>
+            <th><InfoLabel k="deaths">Deaths</InfoLabel></th>
+            <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
+            <th>Deaths traded</th>
+            <th><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
+            <th><InfoLabel k="trade_kills">Trade kills</InfoLabel></th>
+          </tr></thead>
           <tbody>
             {Object.entries(trades?.per_player ?? {}).map(([puuid, t]) => (
               <tr key={puuid}>

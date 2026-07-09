@@ -1,4 +1,26 @@
 import type { ReactNode } from "react";
+import { STAT_INFO } from "../statInfo";
+import { useStatParams, fmtSeconds } from "../statParams";
+
+// A stat name with a hover/focus tooltip explaining the stat and its calculation.
+// Usage: <InfoLabel k="acs" /> (uses the canonical label) or <InfoLabel k="kd">K/D</InfoLabel>.
+// Tooltip text may contain dynamic tokens (e.g. {TRADE_S}) filled from live settings.
+export function InfoLabel({ k, children }: { k: string; children?: ReactNode }) {
+  const info = STAT_INFO[k];
+  const { tradeWindowMs } = useStatParams();
+  const text = children ?? info?.label ?? k;
+  if (!info) return <>{text}</>;
+  const desc = info.desc.replace(/\{TRADE_S\}/g, fmtSeconds(tradeWindowMs));
+  return (
+    <span className="info-label" tabIndex={0}>
+      {text}
+      <span className="info-tip" role="tooltip">
+        <span className="info-tip-title">{info.label}</span>
+        <span className="info-tip-desc">{desc}</span>
+      </span>
+    </span>
+  );
+}
 
 export function StatCard({
   label,
@@ -6,7 +28,7 @@ export function StatCard({
   sub,
   tone,
 }: {
-  label: string;
+  label: ReactNode;
   value: ReactNode;
   sub?: ReactNode;
   tone?: "good" | "bad" | "neutral";

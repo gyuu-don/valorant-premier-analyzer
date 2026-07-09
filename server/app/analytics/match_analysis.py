@@ -102,4 +102,5 @@ def build_match_analysis(
         "our_team_id": our_team_id,
         "players": list(players_all.values()),
         "mvp": mvp,
+        "trade_window_ms": trade_window_ms,
     }

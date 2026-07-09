@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
 import { fetchAgentIcons } from "../agents";
-import { ErrorBox, Loading, Section, WinRateBar } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, WinRateBar } from "../components/common";
 
 export default function MapsAgents() {
   const { data, isLoading, error } = useReport();
@@ -23,7 +23,13 @@ export default function MapsAgents() {
       <Section title="Map performance">
         <table className="data-table">
           <thead>
-            <tr><th>Map</th><th>Games</th><th className="wr-col">Win rate</th><th>Attack RWR</th><th>Defense RWR</th></tr>
+            <tr>
+              <th>Map</th>
+              <th><InfoLabel k="games">Games</InfoLabel></th>
+              <th className="wr-col"><InfoLabel k="win_rate">Win rate</InfoLabel></th>
+              <th><InfoLabel k="attack_round_win_rate">Attack RWR</InfoLabel></th>
+              <th><InfoLabel k="defense_round_win_rate">Defense RWR</InfoLabel></th>
+            </tr>
           </thead>
           <tbody>
             {maps.map(([name, m]) => (
@@ -42,7 +48,11 @@ export default function MapsAgents() {
       <Section title="Agent usage">
         <table className="data-table">
           <thead>
-            <tr><th>Agent</th><th>Games</th><th className="wr-col">Win rate</th></tr>
+            <tr>
+              <th>Agent</th>
+              <th><InfoLabel k="games">Games</InfoLabel></th>
+              <th className="wr-col"><InfoLabel k="win_rate">Win rate</InfoLabel></th>
+            </tr>
           </thead>
           <tbody>
             {agents.map(([name, a]) => {

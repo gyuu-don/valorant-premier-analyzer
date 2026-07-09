@@ -5,17 +5,17 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
 import { fetchAgentIcons } from "../agents";
-import { ErrorBox, Loading, Section } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
 import type { PlayerRow } from "../types";
 
-const COLS: { key: keyof PlayerRow; label: string }[] = [
-  { key: "acs", label: "ACS" },
-  { key: "kd", label: "K/D" },
-  { key: "adr", label: "ADR" },
-  { key: "kast", label: "KAST%" },
-  { key: "hs_pct", label: "HS%" },
-  { key: "multikill_rounds", label: "Multikills" },
-  { key: "clutches", label: "Clutches" },
+const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
+  { key: "acs", label: "ACS", info: "acs" },
+  { key: "kd", label: "K/D", info: "kd" },
+  { key: "adr", label: "ADR", info: "adr" },
+  { key: "kast", label: "KAST%", info: "kast" },
+  { key: "hs_pct", label: "HS%", info: "hs_pct" },
+  { key: "multikill_rounds", label: "Multikills", info: "multikills" },
+  { key: "clutches", label: "Clutches", info: "clutches" },
 ];
 
 // Rough per-metric maxima used to scale the radar to 0..100.
@@ -53,7 +53,7 @@ export default function Players() {
           <thead>
             <tr>
               <th>Player</th>
-              {COLS.map((c) => <th key={c.label}>{c.label}</th>)}
+              {COLS.map((c) => <th key={c.label}><InfoLabel k={c.info}>{c.label}</InfoLabel></th>)}
             </tr>
           </thead>
           <tbody>

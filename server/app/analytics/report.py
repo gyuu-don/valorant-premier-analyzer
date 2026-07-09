@@ -179,6 +179,7 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
     return {
         "team": {**team.summary(), "region": get_region()},
         "matches_analyzed": len(contexts),
+        "trade_window_ms": window,
         "record": {"wins": wins, "losses": len(contexts) - wins},
         "recent_form": _recent_form(contexts),
         "sides": sides,

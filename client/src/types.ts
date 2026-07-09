@@ -99,6 +99,7 @@ export interface Report {
     colors?: { primary?: string | null; secondary?: string | null; tertiary?: string | null };
   };
   matches_analyzed: number;
+  trade_window_ms?: number;
   warning?: string;
   record?: { wins: number; losses: number };
   recent_form?: { result: string; started_at?: string | null }[];
