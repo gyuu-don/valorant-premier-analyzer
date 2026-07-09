@@ -140,6 +140,27 @@ def test_build_match_analysis(match):
     assert p1["impact_rating"] is not None
 
 
+def test_match_analysis_positions_and_sites(match):
+    from app.analytics.match_analysis import build_match_analysis
+
+    a = build_match_analysis(match, "team-123", 4000)
+    pos = a["positions"]
+    # Our deaths: p2 (R0) and p1 (R1). Our kills: p1->e1, p3->e2 (R0), p2->e1 (R1).
+    assert len(pos["deaths"]) == 2
+    assert len(pos["kills"]) == 3
+    assert len(pos["plants"]) == 1
+    assert pos["plants"][0]["site"] == "A"
+    assert pos["plants"][0]["x"] == 5487
+    assert pos["deaths"][0]["side"] == "attack"
+
+    st = a["site_tendencies"]
+    assert st["total_plants"] == 1
+    assert st["avg_plant_time_s"] == 30.0
+    assert st["attack_sites"]["A"]["plants"] == 1
+    assert st["attack_sites"]["A"]["win_rate"] == 100.0
+    assert st["retake_sites"] == {}     # both rounds were attack side
+
+
 def test_build_report(team, match):
     report = build_report(team, [match])
     assert report["matches_analyzed"] == 1

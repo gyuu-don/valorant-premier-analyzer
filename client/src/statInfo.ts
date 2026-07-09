@@ -14,7 +14,7 @@ export const STAT_INFO: Record<string, StatDef> = {
   kd: { label: "K/D", desc: "Kill/Death ratio: kills ÷ deaths." },
   kast: {
     label: "KAST",
-    desc: "Share of rounds where the player got a Kill, an Assist, Survived, or was Traded (their death avenged).",
+    desc: "Share of rounds where the player got a Kill, an Assist, Survived, or was Traded.",
   },
   hs_pct: {
     label: "HS%",
@@ -97,6 +97,24 @@ export const STAT_INFO: Record<string, StatDef> = {
   // Team-level
   record: { label: "Record", desc: "Wins–losses across the matches analyzed (differs from the official Premier standing)." },
   recent_form: { label: "Recent form", desc: "Recent match results, ordered oldest → most recent (newest is marked)." },
+
+  // Spike sites (this match)
+  plant_site_dist: {
+    label: "Plant share",
+    desc: "Share of your team's attack-side spike plants that went to this site, this match.",
+  },
+  site_win_rate: {
+    label: "Win rate",
+    desc: "Round win rate when your team planted the spike on this site (attack side), this match.",
+  },
+  retake_by_site: {
+    label: "Retake win rate",
+    desc: "Defense rounds won after the enemy planted on this site ÷ times they planted there, this match.",
+  },
+  avg_plant_time: {
+    label: "Avg plant time",
+    desc: "Average in-round time at which your team planted the spike (seconds from round start).",
+  },
 
   // Utility (per-match, usage only)
   utility_usage: {

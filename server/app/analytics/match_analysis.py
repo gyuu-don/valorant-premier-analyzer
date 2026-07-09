@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from app.analytics.common import build_context, team_ids
+from app.analytics.common import ATTACK, DEFENSE, build_context, pct, safe_div, team_ids
 from app.analytics.entries import compute_entries
 from app.analytics.mvp import compute_mvp
 from app.analytics.players import compute_players
@@ -23,6 +23,72 @@ from app.models import MatchV4
 def _ctx_for_team(match: MatchV4, team_id: str):
     puuids = {p.puuid for p in match.players if p.team_id == team_id and p.puuid}
     return build_context(match, puuids) if puuids else None
+
+
+def _positions(ctx) -> dict:
+    """Our team's death / kill / plant coordinates (raw game units) tagged with side."""
+    match = ctx.match
+    rounds_with_kill = [k.round for k in match.kills if k.round is not None]
+    kill_base = min(rounds_with_kill) if rounds_with_kill else 0
+
+    deaths, kills, plants = [], [], []
+    for k in match.kills:
+        loc = k.location
+        if not loc or loc.x is None or loc.y is None:
+            continue
+        side = ctx.round_sides.get(k.round - kill_base) if k.round is not None else None
+        if k.victim.puuid in ctx.our_puuids:
+            deaths.append({"x": loc.x, "y": loc.y, "side": side})
+        if k.killer.puuid in ctx.our_puuids:
+            kills.append({"x": loc.x, "y": loc.y, "side": side})
+
+    for idx, rnd in enumerate(match.rounds):
+        plant = rnd.plant
+        if plant and plant.location and plant.location.x is not None and plant.player.team == ctx.our_team_id:
+            plants.append({
+                "x": plant.location.x, "y": plant.location.y,
+                "site": plant.site, "side": ctx.round_sides.get(idx),
+            })
+    return {"deaths": deaths, "kills": kills, "plants": plants}
+
+
+def _site_tendencies(ctx) -> dict:
+    """This match: our attack plants by site (+ win rate, plant timing) and defense retakes
+    by the enemy's plant site."""
+    attack: dict[str, dict] = {}
+    retakes: dict[str, dict] = {}
+    plant_times: list[int] = []
+
+    for idx, rnd in enumerate(ctx.match.rounds):
+        plant = rnd.plant
+        if not plant or not plant.site:
+            continue
+        side = ctx.round_sides.get(idx)
+        won = rnd.winning_team == ctx.our_team_id if rnd.winning_team else False
+        if side == ATTACK and plant.player.team == ctx.our_team_id:
+            a = attack.setdefault(plant.site, {"plants": 0, "wins": 0})
+            a["plants"] += 1
+            a["wins"] += int(won)
+            if plant.round_time_in_ms:
+                plant_times.append(plant.round_time_in_ms)
+        elif side == DEFENSE and plant.player.team not in (None, ctx.our_team_id):
+            r = retakes.setdefault(plant.site, {"opportunities": 0, "wins": 0})
+            r["opportunities"] += 1
+            r["wins"] += int(won)
+
+    total_plants = sum(a["plants"] for a in attack.values())
+    return {
+        "total_plants": total_plants,
+        "avg_plant_time_s": round(safe_div(sum(plant_times), len(plant_times)) / 1000, 1) if plant_times else None,
+        "attack_sites": {
+            s: {"plants": a["plants"], "share": pct(a["plants"], total_plants), "win_rate": pct(a["wins"], a["plants"])}
+            for s, a in sorted(attack.items())
+        },
+        "retake_sites": {
+            s: {"opportunities": r["opportunities"], "win_rate": pct(r["wins"], r["opportunities"])}
+            for s, r in sorted(retakes.items())
+        },
+    }
 
 
 def build_match_analysis(
@@ -44,11 +110,13 @@ def build_match_analysis(
     players_all: dict[str, dict] = {}
     entries_pp: dict[str, dict] = {}
     trades_pp: dict[str, dict] = {}
+    contexts_by_team: dict[str, object] = {}
 
     for tid in ids:
         ctx = _ctx_for_team(match, tid)
         if ctx is None:
             continue
+        contexts_by_team[tid] = ctx
         data = all_breakdowns([ctx], trade_window_ms)
         rows = compute_players(data)
         entries_pp.update(compute_entries(data)["per_player"])
@@ -98,9 +166,15 @@ def build_match_analysis(
         row["impact_rating"] = r["rating"] if r else None
         row["impact_components"] = r["components"] if r else {}
 
+    our_ctx = contexts_by_team.get(our_team_id) if our_team_id else None
+    positions = _positions(our_ctx) if our_ctx else {"deaths": [], "kills": [], "plants": []}
+    site_tendencies = _site_tendencies(our_ctx) if our_ctx else None
+
     return {
         "our_team_id": our_team_id,
         "players": list(players_all.values()),
         "mvp": mvp,
         "trade_window_ms": trade_window_ms,
+        "positions": positions,
+        "site_tendencies": site_tendencies,
     }

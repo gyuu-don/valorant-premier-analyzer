@@ -21,3 +21,38 @@ export function mapImage(name?: string | null): string | null {
   const uuid = MAP_UUIDS[name.trim().toLowerCase()];
   return uuid ? `https://media.valorant-api.com/maps/${uuid}/splash.png` : null;
 }
+
+// Minimap image + coordinate calibration (for plotting game coords on the minimap).
+export interface MapCalibration {
+  minimap: string | null;
+  xMultiplier: number;
+  yMultiplier: number;
+  xScalarToAdd: number;
+  yScalarToAdd: number;
+}
+
+export async function fetchMaps(): Promise<Record<string, MapCalibration>> {
+  const res = await fetch("https://valorant-api.com/v1/maps");
+  if (!res.ok) throw new Error(`maps fetch failed: ${res.status}`);
+  const body = await res.json();
+  const out: Record<string, MapCalibration> = {};
+  for (const m of body.data ?? []) {
+    if (!m.displayName) continue;
+    out[m.displayName.toLowerCase()] = {
+      minimap: m.displayIcon ?? null,
+      xMultiplier: m.xMultiplier ?? 0,
+      yMultiplier: m.yMultiplier ?? 0,
+      xScalarToAdd: m.xScalarToAdd ?? 0,
+      yScalarToAdd: m.yScalarToAdd ?? 0,
+    };
+  }
+  return out;
+}
+
+// Game-world (x,y) -> normalized 0..1 minimap coords. Note the axis swap.
+export function toMinimap(cal: MapCalibration, x: number, y: number): { nx: number; ny: number } {
+  return {
+    nx: y * cal.xMultiplier + cal.xScalarToAdd,
+    ny: x * cal.yMultiplier + cal.yScalarToAdd,
+  };
+}

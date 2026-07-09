@@ -61,6 +61,15 @@ export interface MatchPlayerAnalysis {
   };
 }
 
+export interface PositionPoint {
+  x: number;
+  y: number;
+  side: string | null;
+}
+export interface PlantPoint extends PositionPoint {
+  site: string | null;
+}
+
 export interface MatchAnalysis {
   our_team_id: string | null;
   players: MatchPlayerAnalysis[];
@@ -69,6 +78,17 @@ export interface MatchAnalysis {
     mvp: MvpEntry | null;
     weights?: Record<string, number>;
     weight_total?: number;
+  } | null;
+  positions?: {
+    deaths: PositionPoint[];
+    kills: PositionPoint[];
+    plants: PlantPoint[];
+  };
+  site_tendencies?: {
+    total_plants: number;
+    avg_plant_time_s: number | null;
+    attack_sites: Record<string, { plants: number; share: number; win_rate: number }>;
+    retake_sites: Record<string, { opportunities: number; win_rate: number }>;
   } | null;
 }
 

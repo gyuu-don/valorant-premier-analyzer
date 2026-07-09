@@ -47,7 +47,7 @@
   "rounds": [
     {
       "id": 0, "result": "Elimination", "winning_team": "Red",
-      "plant": { "round_time_in_ms": 30000, "site": "A", "player": { "puuid": "p1", "team": "Red" } },
+      "plant": { "round_time_in_ms": 30000, "site": "A", "location": { "x": 5487, "y": -7445 }, "player": { "puuid": "p1", "team": "Red" } },
       "defuse": null,
       "stats": [
         { "player": { "puuid": "p1", "team": "Red" }, "economy": { "loadout_value": 4200, "remaining": 100, "spent": 3900 } },
@@ -71,10 +71,10 @@
     }
   ],
   "kills": [
-    { "round": 0, "time_in_round_in_ms": 1000, "killer": { "puuid": "p1", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Vandal" } },
-    { "round": 0, "time_in_round_in_ms": 3000, "killer": { "puuid": "e2", "team": "Blue" }, "victim": { "puuid": "p2", "team": "Red" }, "assistants": [], "weapon": { "name": "Phantom" } },
-    { "round": 0, "time_in_round_in_ms": 4000, "killer": { "puuid": "p3", "team": "Red" }, "victim": { "puuid": "e2", "team": "Blue" }, "assistants": [{ "puuid": "p1", "team": "Red" }], "weapon": { "name": "Sheriff" } },
-    { "round": 1, "time_in_round_in_ms": 1000, "killer": { "puuid": "e1", "team": "Blue" }, "victim": { "puuid": "p1", "team": "Red" }, "assistants": [], "weapon": { "name": "Operator" } },
-    { "round": 1, "time_in_round_in_ms": 2000, "killer": { "puuid": "p2", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Spectre" } }
+    { "round": 0, "time_in_round_in_ms": 1000, "killer": { "puuid": "p1", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Vandal" }, "location": { "x": 100, "y": 200 } },
+    { "round": 0, "time_in_round_in_ms": 3000, "killer": { "puuid": "e2", "team": "Blue" }, "victim": { "puuid": "p2", "team": "Red" }, "assistants": [], "weapon": { "name": "Phantom" }, "location": { "x": 300, "y": 400 } },
+    { "round": 0, "time_in_round_in_ms": 4000, "killer": { "puuid": "p3", "team": "Red" }, "victim": { "puuid": "e2", "team": "Blue" }, "assistants": [{ "puuid": "p1", "team": "Red" }], "weapon": { "name": "Sheriff" }, "location": { "x": 500, "y": 600 } },
+    { "round": 1, "time_in_round_in_ms": 1000, "killer": { "puuid": "e1", "team": "Blue" }, "victim": { "puuid": "p1", "team": "Red" }, "assistants": [], "weapon": { "name": "Operator" }, "location": { "x": 700, "y": 800 } },
+    { "round": 1, "time_in_round_in_ms": 2000, "killer": { "puuid": "p2", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Spectre" }, "location": { "x": 900, "y": 1000 } }
   ]
 }

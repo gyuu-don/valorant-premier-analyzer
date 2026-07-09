@@ -298,6 +298,30 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 .info-tip-title { display: block; font-weight: 700; margin-bottom: 4px; font-size: 1rem; }
 .info-tip-desc { display: block; color: var(--muted); font-size: 1rem; line-height: 1.5; }
 
+/* Match Analysis heatmap. */
+.heatmap { display: flex; flex-direction: column; gap: 16px; }
+.heatmap-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.hc-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.chip-btn {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 12px; font-size: 1rem; cursor: pointer; text-transform: capitalize;
+}
+.chip-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hc-layer { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); cursor: pointer; }
+.hc-layer.deaths.on { border-color: var(--bad); }
+.hc-layer.kills.on { border-color: var(--good); }
+.hc-layer.plants.on { border-color: var(--blue); }
+.heatmap-canvas {
+  position: relative; background-size: cover; background-position: center;
+  border: 1px solid var(--border); border-radius: 10px; overflow: hidden; align-self: center;
+}
+.heatmap-canvas canvas { position: absolute; inset: 0; }
+
+/* Spike-site tendencies. */
+.site-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.site-cols h4 { margin: 0 0 10px; font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+@media (max-width: 760px) { .site-cols { grid-template-columns: 1fr; } }
+
 /* Match Analysis player card. */
 .player-card { display: flex; flex-direction: column; gap: 20px; }
 .pc-header { display: flex; align-items: center; gap: 16px; }

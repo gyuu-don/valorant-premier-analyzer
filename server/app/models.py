@@ -136,9 +136,17 @@ class Actor(_Base):
     tag: Optional[str] = None
 
 
+class Location(_Base):
+    """A map-space coordinate (game world units)."""
+
+    x: Optional[int] = None
+    y: Optional[int] = None
+
+
 class PlantEvent(_Base):
     round_time_in_ms: Optional[int] = None
     site: Optional[str] = None
+    location: Optional[Location] = None
     player: Actor = Field(default_factory=Actor)
 
 
@@ -183,6 +191,7 @@ class Kill(_Base):
     victim: Actor = Field(default_factory=Actor)
     assistants: list[Actor] = Field(default_factory=list)
     weapon: WeaponInfo = Field(default_factory=WeaponInfo)
+    location: Optional[Location] = None  # victim's death position
 
 
 # --------------------------------------------------------------------------- #

@@ -2,11 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchMatch, fetchMatches, type MatchSummary } from "../api";
 import { fetchAgents, type AgentInfo } from "../agents";
-import { mapImage } from "../maps";
+import { mapImage, fetchMaps, toMinimap, type MapCalibration } from "../maps";
 import { useSeason } from "../season";
-import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, WinRateBar } from "../components/common";
 import { COMPONENT_LABELS, MvpRanking } from "../components/mvp";
 import type { MatchAnalysis, MatchPlayerAnalysis } from "../types";
+
+const HEAT_SIZE = 520;
+const LAYER_COLORS: Record<string, string> = {
+  deaths: "248,113,113",
+  kills: "74,222,128",
+  plants: "74,168,255",
+};
 
 const UTIL_SLOTS: { key: string; fallback: string }[] = [
   { key: "grenade", fallback: "Grenade" },
@@ -134,6 +141,8 @@ export default function MatchDetail() {
 
 function MatchView({ data }: { data: any }) {
   const agents = useQuery({ queryKey: ["agents-full"], queryFn: fetchAgents, staleTime: Infinity });
+  const maps = useQuery({ queryKey: ["maps-cal"], queryFn: fetchMaps, staleTime: Infinity });
+  const mapName: string = data.metadata?.map?.name ?? "";
   const players = [...(data.players ?? [])].sort(
     (a: any, b: any) => (b.stats?.score ?? 0) - (a.stats?.score ?? 0)
   );
@@ -200,6 +209,18 @@ function MatchView({ data }: { data: any }) {
         </Section>
       )}
 
+      {analysis?.positions && (
+        <Section title={`Heatmap — ${mapName || "map"}`} note="Your team's kills, deaths and plants for this match, on the minimap.">
+          <Heatmap positions={analysis.positions} mapName={mapName} cal={maps.data?.[mapName.toLowerCase()]} />
+        </Section>
+      )}
+
+      {analysis?.site_tendencies && (
+        <Section title="Spike sites — this match">
+          <SiteTendencies st={analysis.site_tendencies} />
+        </Section>
+      )}
+
       <Section title="Round-by-round">
         <div className="round-timeline">
           {rounds.map((r: any, i: number) => (
@@ -213,6 +234,164 @@ function MatchView({ data }: { data: any }) {
         <p className="hint">Cell color = round winner (Red / Blue). "plant" marks the bomb site.</p>
       </Section>
     </>
+  );
+}
+
+function Heatmap({
+  positions,
+  mapName,
+  cal,
+}: {
+  positions: NonNullable<MatchAnalysis["positions"]>;
+  mapName: string;
+  cal?: MapCalibration;
+}) {
+  const [mode, setMode] = useState<"density" | "dots">("density");
+  const [sideFilter, setSideFilter] = useState<"all" | "attack" | "defense">("all");
+  const [layers, setLayers] = useState({ deaths: true, kills: false, plants: true });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pass = (side: string | null) => sideFilter === "all" || side === sideFilter;
+  const count = (arr: { side: string | null }[]) => arr.filter((p) => pass(p.side)).length;
+
+  useEffect(() => {
+    const cv = canvasRef.current;
+    if (!cv || !cal) return;
+    const ctx = cv.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, HEAT_SIZE, HEAT_SIZE);
+
+    const sets: { pts: { x: number; y: number; side: string | null }[]; color: string }[] = [];
+    if (layers.deaths) sets.push({ pts: positions.deaths, color: LAYER_COLORS.deaths });
+    if (layers.kills) sets.push({ pts: positions.kills, color: LAYER_COLORS.kills });
+    if (layers.plants) sets.push({ pts: positions.plants, color: LAYER_COLORS.plants });
+
+    const project = (p: { x: number; y: number }) => {
+      const { nx, ny } = toMinimap(cal, p.x, p.y);
+      return { px: nx * HEAT_SIZE, py: ny * HEAT_SIZE };
+    };
+
+    if (mode === "density") {
+      ctx.globalCompositeOperation = "lighter";
+      const r = HEAT_SIZE * 0.05;
+      for (const s of sets)
+        for (const p of s.pts) {
+          if (!pass(p.side)) continue;
+          const { px, py } = project(p);
+          const g = ctx.createRadialGradient(px, py, 0, px, py, r);
+          g.addColorStop(0, `rgba(${s.color},0.5)`);
+          g.addColorStop(1, `rgba(${s.color},0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      ctx.globalCompositeOperation = "source-over";
+    } else {
+      for (const s of sets)
+        for (const p of s.pts) {
+          if (!pass(p.side)) continue;
+          const { px, py } = project(p);
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${s.color},0.8)`;
+          ctx.fill();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          ctx.stroke();
+        }
+    }
+  }, [positions, cal, mode, sideFilter, layers]);
+
+  if (!cal || !cal.minimap) return <div className="subtle">No minimap available for {mapName}.</div>;
+
+  const LayerToggle = ({ k, label }: { k: "deaths" | "kills" | "plants"; label: string }) => (
+    <label className={`hc-layer ${k} ${layers[k] ? "on" : ""}`}>
+      <input type="checkbox" checked={layers[k]} onChange={(e) => setLayers((l) => ({ ...l, [k]: e.target.checked }))} />
+      {label} ({count(positions[k])})
+    </label>
+  );
+
+  return (
+    <div className="heatmap">
+      <div className="heatmap-controls">
+        <div className="hc-group">
+          {(["density", "dots"] as const).map((m) => (
+            <button key={m} className={`chip-btn ${mode === m ? "active" : ""}`} onClick={() => setMode(m)}>{m}</button>
+          ))}
+        </div>
+        <div className="hc-group">
+          {(["all", "attack", "defense"] as const).map((s) => (
+            <button key={s} className={`chip-btn ${sideFilter === s ? "active" : ""}`} onClick={() => setSideFilter(s)}>{s}</button>
+          ))}
+        </div>
+        <div className="hc-group">
+          <LayerToggle k="deaths" label="Deaths" />
+          <LayerToggle k="kills" label="Kills" />
+          <LayerToggle k="plants" label="Plants" />
+        </div>
+      </div>
+      <div className="heatmap-canvas" style={{ width: HEAT_SIZE, height: HEAT_SIZE, backgroundImage: `url(${cal.minimap})` }}>
+        <canvas ref={canvasRef} width={HEAT_SIZE} height={HEAT_SIZE} />
+      </div>
+    </div>
+  );
+}
+
+function SiteTendencies({ st }: { st: NonNullable<MatchAnalysis["site_tendencies"]> }) {
+  const attack = Object.entries(st.attack_sites);
+  const retake = Object.entries(st.retake_sites);
+  return (
+    <div className="site-tend">
+      <div className="subtle" style={{ marginBottom: 12 }}>
+        {st.total_plants} attack plant{st.total_plants === 1 ? "" : "s"} ·{" "}
+        <InfoLabel k="avg_plant_time">avg plant time</InfoLabel> {st.avg_plant_time_s ?? "—"}s
+      </div>
+      <div className="site-cols">
+        <div>
+          <h4>Attack plants by site</h4>
+          {attack.length === 0 ? (
+            <div className="subtle">No attack plants this match.</div>
+          ) : (
+            <table className="data-table">
+              <thead><tr>
+                <th>Site</th><th>Plants</th>
+                <th><InfoLabel k="plant_site_dist">Share</InfoLabel></th>
+                <th className="wr-col"><InfoLabel k="site_win_rate">Win rate</InfoLabel></th>
+              </tr></thead>
+              <tbody>
+                {attack.map(([s, v]) => (
+                  <tr key={s}>
+                    <td className="name-cell">{s}</td><td>{v.plants}</td><td>{v.share}%</td>
+                    <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div>
+          <h4>Defense retakes by enemy site</h4>
+          {retake.length === 0 ? (
+            <div className="subtle">No enemy plants on defense this match.</div>
+          ) : (
+            <table className="data-table">
+              <thead><tr>
+                <th>Site</th><th>Enemy plants</th>
+                <th className="wr-col"><InfoLabel k="retake_by_site">Retake win rate</InfoLabel></th>
+              </tr></thead>
+              <tbody>
+                {retake.map(([s, v]) => (
+                  <tr key={s}>
+                    <td className="name-cell">{s}</td><td>{v.opportunities}</td>
+                    <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
