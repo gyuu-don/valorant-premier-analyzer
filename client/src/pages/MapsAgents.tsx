@@ -15,14 +15,14 @@ export default function MapsAgents() {
       <Section title="Map performance">
         <table className="data-table">
           <thead>
-            <tr><th>Map</th><th>Games</th><th>Win rate</th><th>Attack RWR</th><th>Defense RWR</th></tr>
+            <tr><th>Map</th><th>Games</th><th className="wr-col">Win rate</th><th>Attack RWR</th><th>Defense RWR</th></tr>
           </thead>
           <tbody>
             {maps.map(([name, m]) => (
               <tr key={name}>
                 <td className="name-cell">{name}</td>
                 <td>{m.games} ({m.wins}W)</td>
-                <td style={{ width: 160 }}><WinRateBar pct={m.win_rate} /></td>
+                <td className="wr-col"><WinRateBar pct={m.win_rate} /></td>
                 <td>{m.attack_round_win_rate}%</td>
                 <td>{m.defense_round_win_rate}%</td>
               </tr>
@@ -34,14 +34,14 @@ export default function MapsAgents() {
       <Section title="Agent usage">
         <table className="data-table">
           <thead>
-            <tr><th>Agent</th><th>Games</th><th>Win rate</th></tr>
+            <tr><th>Agent</th><th>Games</th><th className="wr-col">Win rate</th></tr>
           </thead>
           <tbody>
             {agents.map(([name, a]) => (
               <tr key={name}>
                 <td className="name-cell">{name}</td>
                 <td>{a.games}</td>
-                <td style={{ width: 160 }}><WinRateBar pct={a.win_rate} /></td>
+                <td className="wr-col"><WinRateBar pct={a.win_rate} /></td>
               </tr>
             ))}
           </tbody>
