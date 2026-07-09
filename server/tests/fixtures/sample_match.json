@@ -39,8 +39,10 @@
       "ability_casts": { "grenade": 6, "ability1": 5, "ability2": 4, "ultimate": 1 } }
   ],
   "teams": [
-    { "team_id": "Red", "won": true, "rounds": { "won": 1, "lost": 1 } },
-    { "team_id": "Blue", "won": false, "rounds": { "won": 1, "lost": 1 } }
+    { "team_id": "Red", "won": true, "rounds": { "won": 1, "lost": 1 },
+      "premier_roster": { "id": "team-123", "name": "TestTeam", "tag": "TST", "members": ["p1", "p2", "p3", "p4", "p5"] } },
+    { "team_id": "Blue", "won": false, "rounds": { "won": 1, "lost": 1 },
+      "premier_roster": { "id": "enemy-999", "name": "EnemyTeam", "tag": "ENM", "members": ["e1", "e2", "e3", "e4", "e5"] } }
   ],
   "rounds": [
     {

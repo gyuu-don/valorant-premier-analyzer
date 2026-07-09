@@ -80,20 +80,18 @@ def _callouts(sides: dict, sites: dict, entries: dict, trades: dict) -> list[dic
 
 
 def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
-    roster_puuids = {m.puuid for m in team.members if m.puuid}
-
     contexts = []
     for match in matches:
-        ctx = build_context(match, roster_puuids)
+        ctx = build_context(match, team.id) if team.id else None
         if ctx is not None:
             contexts.append(ctx)
 
     if not contexts:
         return {
-            "team": team.model_dump(),
+            "team": team.summary(),
             "matches_analyzed": 0,
-            "warning": "No analyzable matches found. Check the roster PUUIDs and region, "
-                       "and confirm the HenrikDev match field names against a live sample.",
+            "warning": "No analyzable matches found. Confirm the team id resolves inside "
+                       "teams[].premier_roster and that the region is correct.",
         }
 
     data = all_breakdowns(contexts, trade_window_ms_default())
@@ -110,14 +108,7 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
     wins = sum(1 for c in contexts if c.team_won)
 
     return {
-        "team": {
-            "id": team.id,
-            "name": team.name,
-            "tag": team.tag,
-            "region": team.region,
-            "conference": team.conference,
-            "division": team.division,
-        },
+        "team": {**team.summary(), "region": get_region()},
         "matches_analyzed": len(contexts),
         "record": {"wins": wins, "losses": len(contexts) - wins},
         "recent_form": _recent_form(contexts),
@@ -139,3 +130,9 @@ def trade_window_ms_default() -> int:
     from app.config import get_settings
 
     return get_settings().trade_window_ms
+
+
+def get_region() -> str:
+    from app.config import get_settings
+
+    return get_settings().premier_region

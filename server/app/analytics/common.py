@@ -89,20 +89,36 @@ class MatchContext:
         return bool(puuid) and puuid in self.our_puuids
 
 
-def build_context(match: MatchV4, roster_puuids: set[str]) -> Optional[MatchContext]:
+def build_context(match: MatchV4, our_premier_id: str) -> Optional[MatchContext]:
+    """Locate our team within a match by its Premier team id (teams[].premier_roster.id).
+
+    Falls back to matching a set of roster PUUIDs if a set is passed instead of an id
+    (used by unit tests / when a match lacks premier_roster).
+    """
     ids = team_ids(match)
     if len(ids) < 2:
         return None
 
-    # Count roster members per team; the team with more of our roster is "ours".
-    counts: dict[str, int] = {tid: 0 for tid in ids}
-    for p in match.players:
-        if p.puuid in roster_puuids and p.team_id in counts:
-            counts[p.team_id] += 1
+    our_team_id: Optional[str] = None
 
-    if not any(counts.values()):
+    if isinstance(our_premier_id, (set, frozenset)):
+        # Roster-PUUID identification (test / fallback path).
+        roster_puuids = our_premier_id
+        counts = {tid: 0 for tid in ids}
+        for p in match.players:
+            if p.puuid in roster_puuids and p.team_id in counts:
+                counts[p.team_id] += 1
+        if any(counts.values()):
+            our_team_id = max(counts, key=counts.get)
+    else:
+        # Preferred: match the embedded Premier roster id.
+        for t in match.teams:
+            if t.premier_roster and t.premier_roster.id == our_premier_id:
+                our_team_id = t.team_id
+                break
+
+    if our_team_id is None:
         return None
-    our_team_id = max(counts, key=counts.get)
     opp_team_id = _other(our_team_id, ids)
 
     our_puuids = {

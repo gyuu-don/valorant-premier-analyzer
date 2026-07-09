@@ -5,7 +5,7 @@ import pytest
 
 from app.analytics.common import build_context
 from app.analytics.rounds import all_breakdowns
-from app.models import MatchV4, PremierRosterMember, PremierTeam
+from app.models import MatchV4, PremierTeam
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_match.json"
 ROSTER_PUUIDS = {"p1", "p2", "p3", "p4", "p5"}
@@ -31,10 +31,5 @@ def data(context):
 
 @pytest.fixture
 def team() -> PremierTeam:
-    return PremierTeam(
-        id="team-123",
-        name="TestTeam",
-        tag="TST",
-        region="na",
-        members=[PremierRosterMember(puuid=p) for p in ROSTER_PUUIDS],
-    )
+    # Roster is resolved from teams[].premier_roster in the match, so only the id matters.
+    return PremierTeam(id="team-123", name="TestTeam", tag="TST")

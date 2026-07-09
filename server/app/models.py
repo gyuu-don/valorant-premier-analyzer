@@ -102,10 +102,20 @@ class TeamRoundRecord(_Base):
     lost: int = 0
 
 
+class PremierRosterInMatch(_Base):
+    """The Premier team snapshot embedded on each match team (v4)."""
+
+    id: Optional[str] = None
+    name: Optional[str] = None
+    tag: Optional[str] = None
+    members: list[str] = Field(default_factory=list)
+
+
 class MatchTeam(_Base):
     team_id: Optional[str] = None
     won: bool = False
     rounds: TeamRoundRecord = Field(default_factory=TeamRoundRecord)
+    premier_roster: Optional[PremierRosterInMatch] = None
 
 
 # --------------------------------------------------------------------------- #
@@ -202,17 +212,44 @@ class PremierRosterMember(_Base):
     tag: Optional[str] = None
 
 
+class PremierStats(_Base):
+    wins: int = 0
+    losses: int = 0
+    matches: int = 0
+    rounds_won: int = 0
+    rounds_lost: int = 0
+
+
+class PremierPlacement(_Base):
+    points: Optional[int] = None
+    conference: Optional[str] = None
+    division: Optional[int] = None
+    place: Optional[int] = None
+
+
 class PremierTeam(_Base):
     id: Optional[str] = None
     name: Optional[str] = None
     tag: Optional[str] = None
-    region: Optional[str] = None
-    conference: Optional[str] = None
-    division: Optional[int] = None
-    ranking: Optional[int] = None
-    wins: Optional[int] = None
-    losses: Optional[int] = None
-    members: list[PremierRosterMember] = Field(default_factory=list)
+    enrolled: Optional[bool] = None
+    stats: PremierStats = Field(default_factory=PremierStats)
+    placement: PremierPlacement = Field(default_factory=PremierPlacement)
+    # Roster from the /premier/{name}/{tag} endpoint; frequently empty — the reliable
+    # roster comes from teams[].premier_roster on each match instead.
+    member: list = Field(default_factory=list)
+
+    def summary(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "tag": self.tag,
+            "conference": self.placement.conference,
+            "division": self.placement.division,
+            "place": self.placement.place,
+            "points": self.placement.points,
+            "wins": self.stats.wins,
+            "losses": self.stats.losses,
+        }
 
 
 class PremierHistoryEntry(_Base):

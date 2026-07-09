@@ -38,6 +38,10 @@ export interface Report {
     region?: string;
     conference?: string;
     division?: number;
+    place?: number;
+    points?: number;
+    wins?: number;
+    losses?: number;
   };
   matches_analyzed: number;
   warning?: string;

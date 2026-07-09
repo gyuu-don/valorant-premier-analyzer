@@ -96,6 +96,13 @@ npm run dev          # runs FastAPI + Vite together
   a precise "utility that was followed up on" causation metric. This is labeled in the UI.
 - **Clutches / side inference are heuristics** derived from kill order and plant events,
   not explicit API fields.
+- **Roster source:** the `/premier/{name}/{tag}` endpoint often returns an empty roster,
+  so the app identifies your team inside each match via `teams[].premier_roster.id` and
+  reads the participating PUUIDs from there — no manual roster entry needed.
+- **Analyzed record vs official standing:** the "Record (N analyzed)" card counts the
+  league matches actually pulled and analyzed (there can be several per Premier match
+  night). Your **official Premier standing** (W–L, division, points) is shown separately
+  in the header. These two numbers are expected to differ.
 - **Field names:** the analytics key off `server/app/models.py`. If HenrikDev changes its
   v4 schema, adjust the models there (confirm against a live sample or the OpenAPI spec at
   <https://api.henrikdev.xyz/docs>). Models are defensive (`extra="ignore"`, optional

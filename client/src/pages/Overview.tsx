@@ -26,14 +26,15 @@ export default function Overview() {
           {team.name} <span className="tag">#{team.tag}</span>
         </h1>
         <div className="subtle">
-          {team.region?.toUpperCase()} · {team.conference ?? "—"} · Division {team.division ?? "—"} ·{" "}
-          {data.matches_analyzed} matches analyzed
+          {team.region?.toUpperCase()} · {team.conference ?? "—"} · Division {team.division ?? "—"}
+          {team.place != null && ` · #${team.place} (${team.points ?? 0} pts)`}
+          {team.wins != null && ` · Premier standing ${team.wins}–${team.losses}`}
         </div>
       </div>
 
       <div className="stat-grid">
         <StatCard
-          label="Record"
+          label={`Record (${data.matches_analyzed} analyzed)`}
           value={`${record?.wins}–${record?.losses}`}
           sub={`${wr}% win rate`}
           tone={wr >= 50 ? "good" : "bad"}
