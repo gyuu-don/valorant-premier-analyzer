@@ -1,12 +1,20 @@
+import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
+import { fetchAgentIcons } from "../agents";
 import { ErrorBox, Loading, Section, WinRateBar } from "../components/common";
 
 export default function MapsAgents() {
   const { data, isLoading, error } = useReport();
+  const agentIcons = useQuery({
+    queryKey: ["agent-icons"],
+    queryFn: fetchAgentIcons,
+    staleTime: Infinity,
+  });
   if (isLoading) return <Loading />;
   if (error) return <ErrorBox error={error} />;
   const maps = Object.entries(data?.maps ?? {});
   const agents = Object.entries(data?.agents ?? {});
+  const icons = agentIcons.data;
 
   return (
     <div className="page">
@@ -37,13 +45,23 @@ export default function MapsAgents() {
             <tr><th>Agent</th><th>Games</th><th className="wr-col">Win rate</th></tr>
           </thead>
           <tbody>
-            {agents.map(([name, a]) => (
-              <tr key={name}>
-                <td className="name-cell">{name}</td>
-                <td>{a.games}</td>
-                <td className="wr-col"><WinRateBar pct={a.win_rate} /></td>
-              </tr>
-            ))}
+            {agents.map(([name, a]) => {
+              const icon = icons?.[name.toLowerCase()];
+              return (
+                <tr key={name}>
+                  <td className="name-cell">
+                    <span className="agent-inline">
+                      {icon
+                        ? <img className="agent-face-sm" src={icon} alt={name} loading="lazy" />
+                        : <span className="agent-face-sm agent-face-ph">{name[0]}</span>}
+                      {name}
+                    </span>
+                  </td>
+                  <td>{a.games}</td>
+                  <td className="wr-col"><WinRateBar pct={a.win_rate} /></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </Section>

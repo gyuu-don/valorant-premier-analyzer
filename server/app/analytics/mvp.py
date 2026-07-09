@@ -86,6 +86,10 @@ def compute_mvp(
             "name": player_rows[official_mvp_puuid]["name"],
             "score": player_rows[official_mvp_puuid]["score"],
         },
+        # Weights + weight_total let the client reconstruct each player's exact
+        # rating: 100 * Σ(weight * normalized_component) / weight_total.
+        "weights": dict(MVP_WEIGHTS),
+        "weight_total": round(weight_total, 4),
         "method": (
             "Composite of ACS, KAST, entry win rate, trade contribution, multikills, "
             "clutches and ADR — each min-max normalized across the roster and weighted."

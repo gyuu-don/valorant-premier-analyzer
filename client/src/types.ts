@@ -107,6 +107,8 @@ export interface Report {
     ranking: MvpEntry[];
     mvp: MvpEntry | null;
     official_mvp: { puuid: string; name: string; score: number } | null;
+    weights?: Record<string, number>;
+    weight_total?: number;
     method?: string;
   };
   baseline?: Baseline | null;

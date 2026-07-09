@@ -1,5 +1,16 @@
 import { useReport } from "../hooks";
 import { ErrorBox, Loading, Section, StatCard, WinRateBar } from "../components/common";
+import type { MvpEntry, Report } from "../types";
+
+const COMPONENT_LABELS: Record<string, string> = {
+  acs: "ACS",
+  kast: "KAST",
+  entry_win_rate: "Entry win %",
+  trade_contribution: "Trade contribution",
+  multikills: "Multikills",
+  clutches: "Clutches",
+  adr: "ADR",
+};
 
 export default function Overview() {
   const { data, isLoading, error } = useReport();
@@ -57,7 +68,7 @@ export default function Overview() {
       </div>
 
       {mvp?.mvp && (
-        <Section title="Advanced Team MVP" note={mvp.method}>
+        <Section title="Advanced Team MVP">
           <div className="mvp-row">
             <div className="mvp-card">
               <div className="mvp-name">{mvp.mvp.name}</div>
@@ -82,13 +93,20 @@ export default function Overview() {
                   {mvp.ranking.map((r) => (
                     <tr key={r.puuid}>
                       <td>{r.name}</td>
-                      <td><WinRateBar pct={r.rating} /></td>
+                      <td>
+                        <ImpactCell
+                          entry={r}
+                          weights={mvp.weights}
+                          weightTotal={mvp.weight_total}
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
+          <MvpExplainer mvp={mvp} />
         </Section>
       )}
 
@@ -114,6 +132,126 @@ function LabeledBar({ label, pct, extra }: { label: string; pct: number; extra?:
         {extra && <span className="subtle">{extra}</span>}
       </div>
       <WinRateBar pct={pct} />
+    </div>
+  );
+}
+
+function MvpExplainer({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
+  const weights = mvp.weights ?? {};
+  const total = mvp.weight_total ?? (Object.values(weights).reduce((a, b) => a + b, 0) || 1);
+  const example = mvp.mvp;
+  const rows = Object.keys(weights).map((k) => {
+    const weight = weights[k];
+    const norm = example?.components[k] ?? 0;
+    return { k, label: COMPONENT_LABELS[k] ?? k, weight, norm, contrib: weight * norm };
+  });
+  const sum = rows.reduce((a, r) => a + r.contrib, 0);
+  const pctWeight = (w: number) => Math.round((100 * w) / total);
+  const acsW = weights["acs"] ?? 0;
+  const acsN = example?.components["acs"] ?? 0;
+
+  return (
+    <details className="mvp-explainer" open>
+      <summary>How is the impact rating calculated?</summary>
+      <div className="explainer-body">
+        <p>
+          The impact rating is a single <strong>0–100</strong> score that blends seven
+          per-round performance metrics into one number, so you can compare overall impact
+          rather than juggling seven stat columns. Raw combat score (ACS) alone rewards
+          fraggers; this also credits the KAST consistency, entry duels, trades, multikills
+          and clutches that win rounds.
+        </p>
+        <p>
+          Each metric is <strong>min-max normalized</strong> across your roster — the
+          team-best in that metric scores <strong>1.0</strong>, the team-worst
+          <strong> 0.0</strong>, and everyone else lands proportionally in between. Those
+          normalized values are multiplied by each metric's weight, summed, and scaled to 100:
+        </p>
+        <p className="formula">rating = 100 × Σ(weight × normalized) ÷ Σweight</p>
+
+        <div className="explainer-cols">
+          <div>
+            <h4>Component weights</h4>
+            <ul className="weight-list">
+              {rows.map((r) => (
+                <li key={r.k}><span>{r.label}</span><span>{pctWeight(r.weight)}%</span></li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4>Worked example — {example?.name}</h4>
+            <table className="tip-table">
+              <thead>
+                <tr><th>Component</th><th>weight</th><th>× norm</th><th>= contrib</th></tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.k}>
+                    <td>{r.label}</td>
+                    <td>{r.weight.toFixed(2)}</td>
+                    <td>{r.norm.toFixed(3)}</td>
+                    <td>{r.contrib.toFixed(3)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="formula">100 × {sum.toFixed(3)} ÷ {total.toFixed(2)} = <strong>{example?.rating}</strong></p>
+            <p className="explainer-note">
+              Reading one line: ACS carries {pctWeight(acsW)}% weight, and {example?.name}'s
+              ACS normalized to {acsN.toFixed(2)} versus the roster — so it adds
+              {" "}{(acsW * acsN).toFixed(3)} to the score. A player with the team's best ACS
+              would normalize to 1.00 and contribute the full {acsW.toFixed(2)}.
+            </p>
+          </div>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function ImpactCell({
+  entry,
+  weights,
+  weightTotal,
+}: {
+  entry: MvpEntry;
+  weights?: Record<string, number>;
+  weightTotal?: number;
+}) {
+  const w = weights ?? {};
+  const total = weightTotal ?? (Object.values(w).reduce((a, b) => a + b, 0) || 1);
+  const rows = Object.keys(w).map((k) => {
+    const weight = w[k];
+    const norm = entry.components[k] ?? 0;
+    return { k, label: COMPONENT_LABELS[k] ?? k, weight, norm, contrib: weight * norm };
+  });
+  const sum = rows.reduce((a, r) => a + r.contrib, 0);
+
+  return (
+    <div className="impact-cell" tabIndex={0}>
+      <WinRateBar pct={entry.rating} />
+      <div className="impact-tip" role="tooltip">
+        <div className="tip-head">{entry.name} — impact {entry.rating}</div>
+        <table className="tip-table">
+          <thead>
+            <tr><th>Component</th><th>weight</th><th>× norm</th><th>= contrib</th></tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.k}>
+                <td>{r.label}</td>
+                <td>{r.weight.toFixed(2)}</td>
+                <td>{r.norm.toFixed(3)}</td>
+                <td>{r.contrib.toFixed(3)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="tip-total">
+          100 × {sum.toFixed(3)} ÷ {total.toFixed(2)} = <strong>{entry.rating}</strong>
+        </div>
+        <div className="tip-note">Each component is min-max normalized (0–1) across the roster.</div>
+      </div>
     </div>
   );
 }
