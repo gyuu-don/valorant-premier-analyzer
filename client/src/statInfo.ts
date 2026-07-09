@@ -55,6 +55,24 @@ export const STAT_INFO: Record<string, StatDef> = {
     desc: "Kills that register as a trade: you killed the enemy who had just killed a teammate, within the trade window ({TRADE_S}s) of that teammate's death — matched using in-round kill timestamps.",
   },
 
+  // Trade phase splits (subsets of the overall trade rate)
+  trade_attack_preplant: {
+    label: "Attack pre-plant",
+    desc: "Deaths-traded rate on attack before your team plants the spike — the execute/entry phase where trading is most expected. A subset of the overall trade rate.",
+  },
+  trade_attack_postplant: {
+    label: "Attack post-plant",
+    desc: "Deaths-traded rate on attack after your team has planted (defending the plant). A subset of the overall trade rate.",
+  },
+  trade_defense_retake: {
+    label: "Defense retake",
+    desc: "Deaths-traded rate on defense after the enemy has planted — the retake phase where coordinated trading matters. A subset of the overall trade rate.",
+  },
+  trade_defense_hold: {
+    label: "Defense hold",
+    desc: "Deaths-traded rate on defense before any enemy plant. Expected to be lower — site anchors often die solo by design, so treat this as context, not a failure.",
+  },
+
   // Site play
   retake_success: {
     label: "Retake success",

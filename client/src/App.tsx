@@ -75,7 +75,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Data via the unofficial HenrikDev API · Not affiliated with Riot Games
+        Data via the unofficial HenrikDev API · Not affiliated with Riot Games · Claude Coded...
       </footer>
     </div>
     </StatParamsProvider>

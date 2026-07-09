@@ -26,21 +26,32 @@ def _ctx_for_team(match: MatchV4, team_id: str):
 
 
 def _positions(ctx) -> dict:
-    """Our team's death / kill / plant coordinates (raw game units) tagged with side."""
+    """Our team's death / kill / plant coordinates (raw game units), each tagged with
+    side, pre/post-plant phase, and the involved player's puuid (for filtering)."""
     match = ctx.match
     rounds_with_kill = [k.round for k in match.kills if k.round is not None]
     kill_base = min(rounds_with_kill) if rounds_with_kill else 0
+    plant_time_by_idx = {
+        idx: (rnd.plant.round_time_in_ms if rnd.plant else None)
+        for idx, rnd in enumerate(match.rounds)
+    }
+
+    def phase_for(idx, t) -> str:
+        pt = plant_time_by_idx.get(idx)
+        return "postplant" if (pt is not None and t is not None and t >= pt) else "preplant"
 
     deaths, kills, plants = [], [], []
     for k in match.kills:
         loc = k.location
         if not loc or loc.x is None or loc.y is None:
             continue
-        side = ctx.round_sides.get(k.round - kill_base) if k.round is not None else None
+        idx = k.round - kill_base if k.round is not None else None
+        side = ctx.round_sides.get(idx) if idx is not None else None
+        phase = phase_for(idx, k.time_in_round_in_ms) if idx is not None else "preplant"
         if k.victim.puuid in ctx.our_puuids:
-            deaths.append({"x": loc.x, "y": loc.y, "side": side})
+            deaths.append({"x": loc.x, "y": loc.y, "side": side, "phase": phase, "puuid": k.victim.puuid})
         if k.killer.puuid in ctx.our_puuids:
-            kills.append({"x": loc.x, "y": loc.y, "side": side})
+            kills.append({"x": loc.x, "y": loc.y, "side": side, "phase": phase, "puuid": k.killer.puuid})
 
     for idx, rnd in enumerate(match.rounds):
         plant = rnd.plant
@@ -48,6 +59,7 @@ def _positions(ctx) -> dict:
             plants.append({
                 "x": plant.location.x, "y": plant.location.y,
                 "site": plant.site, "side": ctx.round_sides.get(idx),
+                "phase": "postplant", "puuid": plant.player.puuid,
             })
     return {"deaths": deaths, "kills": kills, "plants": plants}
 

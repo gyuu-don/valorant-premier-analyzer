@@ -65,6 +65,8 @@ export interface PositionPoint {
   x: number;
   y: number;
   side: string | null;
+  phase: string;      // "preplant" | "postplant"
+  puuid: string | null;
 }
 export interface PlantPoint extends PositionPoint {
   site: string | null;
@@ -158,6 +160,7 @@ export interface Report {
     tradeable_deaths: number;
     untradeable_deaths: number;
     traded_deaths: number;
+    by_phase?: Record<string, { tradeable: number; traded: number; rate: number }>;
     per_player: Record<string, { deaths: number; tradeable_deaths: number; deaths_traded: number; trade_kills: number; deaths_traded_rate: number }>;
   };
   utility?: {

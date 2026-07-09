@@ -10,6 +10,8 @@ def compute_trades(
 ) -> dict:
     total_deaths = tradeable_deaths = traded_deaths = 0
     per_player: dict[str, dict] = {}
+    phase_tradeable: dict[str, int] = {}
+    phase_traded: dict[str, int] = {}
 
     def _row() -> dict:
         return {"deaths": 0, "tradeable_deaths": 0, "deaths_traded": 0, "trade_kills": 0}
@@ -19,6 +21,10 @@ def compute_trades(
             total_deaths += len(rb.deaths)
             tradeable_deaths += len(rb.tradeable_deaths)
             traded_deaths += len(rb.traded_deaths)
+            for phase, n in rb.tradeable_by_phase.items():
+                phase_tradeable[phase] = phase_tradeable.get(phase, 0) + n
+            for phase, n in rb.traded_by_phase.items():
+                phase_traded[phase] = phase_traded.get(phase, 0) + n
             for puuid in rb.deaths:
                 pp = per_player.setdefault(puuid, _row())
                 pp["deaths"] += 1
@@ -34,11 +40,22 @@ def compute_trades(
         # Rate is over tradeable deaths only — last-man-standing deaths are excluded.
         pp["deaths_traded_rate"] = pct(pp["deaths_traded"], pp["tradeable_deaths"])
 
+    phases = ["attack_preplant", "attack_postplant", "defense_retake", "defense_hold"]
+    by_phase = {
+        phase: {
+            "tradeable": phase_tradeable.get(phase, 0),
+            "traded": phase_traded.get(phase, 0),
+            "rate": pct(phase_traded.get(phase, 0), phase_tradeable.get(phase, 0)),
+        }
+        for phase in phases
+    }
+
     return {
         "deaths_traded_rate": pct(traded_deaths, tradeable_deaths),
         "total_deaths": total_deaths,
         "tradeable_deaths": tradeable_deaths,
         "untradeable_deaths": total_deaths - tradeable_deaths,
         "traded_deaths": traded_deaths,
+        "by_phase": by_phase,
         "per_player": per_player,
     }

@@ -8,12 +8,24 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from app.analytics.common import MatchContext
+from app.analytics.common import ATTACK, DEFENSE, MatchContext
 from app.models import Kill
 
 
 def _kill_time(k: Kill) -> int:
     return k.time_in_round_in_ms if k.time_in_round_in_ms is not None else 10**9
+
+
+def _phase(side: str, death_time_ms: Optional[int], plant_time_ms: Optional[int]) -> str:
+    """Classify a death by game state: attack/defense × pre/post plant."""
+    post = (
+        plant_time_ms is not None
+        and death_time_ms is not None
+        and death_time_ms >= plant_time_ms
+    )
+    if side == ATTACK:
+        return "attack_postplant" if post else "attack_preplant"
+    return "defense_retake" if post else "defense_hold"
 
 
 @dataclass
@@ -34,6 +46,9 @@ class RoundBreakdown:
     tradeable_deaths: set[str] = field(default_factory=set)
     traded_deaths: set[str] = field(default_factory=set)            # tradeable deaths that were avenged
     trade_kills_by_player: dict[str, int] = field(default_factory=dict)  # our trade kills
+    # Game-state splits of tradeable/traded deaths (team-level), keyed by phase.
+    tradeable_by_phase: dict[str, int] = field(default_factory=dict)
+    traded_by_phase: dict[str, int] = field(default_factory=dict)
     clutch_puuid: Optional[str] = None
 
 
@@ -90,6 +105,7 @@ def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdo
         # A death is only "tradeable" if a teammate was still alive at that moment
         # (a last-man-standing death cannot be traded and is excluded from the rate).
         # It is "traded" if that killer is killed by one of ours within the window.
+        plant_time = rnd.plant.round_time_in_ms if rnd.plant else None
         our_dead: set[str] = set()
         for i, k in enumerate(round_kills):
             if not ctx.is_ours(k.victim.puuid):
@@ -97,6 +113,11 @@ def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdo
             victim_puuid = k.victim.puuid
             teammates_alive = ctx.our_puuids - our_dead - {victim_puuid}
             if teammates_alive:
+                phase = _phase(side, k.time_in_round_in_ms, plant_time)
+                # Guard phase counts to the first tradeable death per player-round so the
+                # splits sum to the set-based overall (a Sage-res player can die twice).
+                if victim_puuid not in rb.tradeable_deaths:
+                    rb.tradeable_by_phase[phase] = rb.tradeable_by_phase.get(phase, 0) + 1
                 rb.tradeable_deaths.add(victim_puuid)
                 killer_puuid = k.killer.puuid
                 death_time = _kill_time(k)
@@ -104,6 +125,8 @@ def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdo
                     if _kill_time(later) - death_time > trade_window_ms:
                         break
                     if later.victim.puuid == killer_puuid and ctx.is_ours(later.killer.puuid):
+                        if victim_puuid not in rb.traded_deaths:
+                            rb.traded_by_phase[phase] = rb.traded_by_phase.get(phase, 0) + 1
                         rb.traded_deaths.add(victim_puuid)
                         rb.trade_kills_by_player[later.killer.puuid] = (
                             rb.trade_kills_by_player.get(later.killer.puuid, 0) + 1

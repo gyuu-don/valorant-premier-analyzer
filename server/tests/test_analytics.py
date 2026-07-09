@@ -39,6 +39,11 @@ def test_trades(data):
     assert t["deaths_traded_rate"] == 100.0
     assert t["per_player"]["p3"]["trade_kills"] == 1
     assert t["per_player"]["p2"]["trade_kills"] == 1
+    # Both our deaths are attack pre-plant (deaths at 3000ms / 1000ms; plant at 30000ms / none).
+    bp = t["by_phase"]
+    assert bp["attack_preplant"] == {"tradeable": 2, "traded": 2, "rate": 100.0}
+    assert bp["defense_hold"] == {"tradeable": 0, "traded": 0, "rate": 0.0}
+    assert bp["attack_postplant"]["tradeable"] == 0
 
 
 def test_trades_exclude_untradeable_last_man():
@@ -152,6 +157,11 @@ def test_match_analysis_positions_and_sites(match):
     assert pos["plants"][0]["site"] == "A"
     assert pos["plants"][0]["x"] == 5487
     assert pos["deaths"][0]["side"] == "attack"
+    # Deaths at 3000ms / 1000ms with plant at 30000ms (or none) -> pre-plant; puuid tagged.
+    assert {d["phase"] for d in pos["deaths"]} == {"preplant"}
+    assert {d["puuid"] for d in pos["deaths"]} == {"p1", "p2"}
+    assert pos["plants"][0]["phase"] == "postplant"
+    assert pos["plants"][0]["puuid"] == "p1"
 
     st = a["site_tendencies"]
     assert st["total_plants"] == 1

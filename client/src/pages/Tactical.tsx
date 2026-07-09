@@ -1,5 +1,12 @@
 import { useReport } from "../hooks";
-import { ErrorBox, InfoLabel, Loading, Section, StatCard } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, StatCard, WinRateBar } from "../components/common";
+
+const TRADE_PHASES: { key: string; slug: string }[] = [
+  { key: "attack_preplant", slug: "trade_attack_preplant" },
+  { key: "attack_postplant", slug: "trade_attack_postplant" },
+  { key: "defense_retake", slug: "trade_defense_retake" },
+  { key: "defense_hold", slug: "trade_defense_hold" },
+];
 
 export default function Tactical() {
   const { data, isLoading, error } = useReport();
@@ -101,6 +108,35 @@ export default function Tactical() {
           </tbody>
         </table>
       </Section>
+
+      {trades?.by_phase && (
+        <Section
+          title="Trades by game state"
+          note="Subsets of the overall trade rate. Defense holds are expected to run lower — site anchors often die solo by design, so read that row as context rather than a failure."
+        >
+          <table className="data-table">
+            <thead><tr>
+              <th>Phase</th>
+              <th>Traded</th>
+              <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
+              <th className="wr-col"><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
+            </tr></thead>
+            <tbody>
+              {TRADE_PHASES.map(({ key, slug }) => {
+                const v = trades.by_phase![key] ?? { tradeable: 0, traded: 0, rate: 0 };
+                return (
+                  <tr key={key}>
+                    <td className="name-cell"><InfoLabel k={slug} /></td>
+                    <td>{v.traded}</td>
+                    <td>{v.tradeable}</td>
+                    <td className="wr-col"><WinRateBar pct={v.rate} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Section>
+      )}
     </div>
   );
 }

@@ -298,7 +298,14 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 .info-tip-title { display: block; font-weight: 700; margin-bottom: 4px; font-size: 1rem; }
 .info-tip-desc { display: block; color: var(--muted); font-size: 1rem; line-height: 1.5; }
 
+/* Match Analysis sub-tabs. */
+.subnav {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+
 /* Match Analysis heatmap. */
+.heatmap-canvas { max-width: 100%; }
 .heatmap { display: flex; flex-direction: column; gap: 16px; }
 .heatmap-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
 .hc-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -308,6 +315,12 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 }
 .chip-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .hc-layer { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); cursor: pointer; }
+.hc-select {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px; font-size: 1rem; cursor: pointer; max-width: 220px;
+}
+.plant-legend { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); }
+.plant-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .hc-layer.deaths.on { border-color: var(--bad); }
 .hc-layer.kills.on { border-color: var(--good); }
 .hc-layer.plants.on { border-color: var(--blue); }

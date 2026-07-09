@@ -41,19 +41,49 @@ async def get_team(name: str, tag: str) -> PremierTeam:
     return PremierTeam.model_validate(data)
 
 
-async def get_team_history(team_id: str) -> list[PremierHistoryEntry]:
-    """GET /valorant/v1/premier/{team_id}/history -> list of past matches."""
+async def get_team_history(
+    team_id: str, region: Optional[str] = None
+) -> list[PremierHistoryEntry]:
+    """GET /valorant/v1/premier/{team_id}/history -> all past matches.
+
+    Consolidates `league_matches` and `tournament_matches` (playoffs) into one list.
+    Tournament entries are brackets whose `matches` are bare match-id strings with no
+    date, so we enrich their `started_at` from the (cached) match metadata to keep
+    date-based sorting and stage grouping working.
+    """
     settings = get_settings()
+    region = region or settings.premier_region
     key = f"history:{team_id}"
 
     async def factory() -> Any:
         return _unwrap(await client.get(f"/valorant/v1/premier/{team_id}/history"))
 
     data = await cache.get_or_set(key, settings.team_cache_ttl, factory)
-    # Some responses nest under {"league_matches": [...]}; handle both.
-    if isinstance(data, dict):
-        data = data.get("league_matches") or data.get("matches") or []
-    return [PremierHistoryEntry.model_validate(m) for m in data or []]
+    if not isinstance(data, dict):
+        # Legacy shape: a bare list of league matches.
+        return [PremierHistoryEntry.model_validate(m) for m in data or []]
+
+    league = data.get("league_matches") or data.get("matches") or []
+    entries = [PremierHistoryEntry.model_validate(m) for m in league]
+    seen = {e.resolved_match_id for e in entries if e.resolved_match_id}
+
+    # Collect tournament match ids (nested, and duplicated across bracket entries).
+    tourney_ids: list[str] = []
+    for tourney in data.get("tournament_matches") or []:
+        for mid in tourney.get("matches") or []:
+            if isinstance(mid, str) and mid not in seen and mid not in tourney_ids:
+                tourney_ids.append(mid)
+
+    for mid in tourney_ids:
+        started_at = None
+        try:
+            match = await get_match(region, mid)  # cached; only a few playoff matches
+            started_at = match.metadata.started_at
+        except Exception:
+            pass
+        entries.append(PremierHistoryEntry(match_id=mid, started_at=started_at))
+
+    return entries
 
 
 async def get_match(region: str, match_id: str) -> MatchV4:
