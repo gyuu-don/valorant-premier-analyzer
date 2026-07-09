@@ -8,16 +8,33 @@ export default function Tactical() {
   if (!data || data.matches_analyzed === 0)
     return <div className="notice">No tactical data.</div>;
 
-  const { entries, trades, sites, utility, callouts } = data;
+  const { entries, trades, sites, utility, callouts, baseline } = data;
+
+  // Grade a metric against the opponent baseline (division norm).
+  const vs = (ours: number, theirs?: number) => {
+    if (theirs == null) return { sub: "", tone: "neutral" as const };
+    const gap = Math.round((ours - theirs) * 10) / 10;
+    const arrow = gap >= 5 ? "▲" : gap <= -3 ? "▾" : "≈";
+    const tone = gap <= -3 ? ("bad" as const) : gap >= 5 ? ("good" as const) : ("neutral" as const);
+    return { sub: `vs ${theirs}% opp ${arrow}`, tone };
+  };
+
+  const eGrade = vs(entries?.opening_duel_win_rate ?? 0, baseline?.opening_duel_win_rate);
+  const tGrade = vs(trades?.deaths_traded_rate ?? 0, baseline?.deaths_traded_rate);
+  const rGrade = vs(sites?.defense.retake_success_rate ?? 0, baseline?.retake_success_rate);
+  const pGrade = vs(sites?.attack.post_plant_conversion ?? 0, baseline?.post_plant_conversion);
 
   return (
     <div className="page">
       <div className="page-head">
         <h1>Tactical Breakdown</h1>
-        <div className="subtle">Where the team can improve: entries, trades, site play & utility.</div>
+        <div className="subtle">
+          Benchmarked against the {baseline?.matches ?? 0} opponents you actually faced — your
+          division's true skill level, not an absolute pro benchmark.
+        </div>
       </div>
 
-      <Section title="Coaching callouts">
+      <Section title="Coaching callouts" note="Graded relative to opponents faced (division norm).">
         <ul className="callouts">
           {(callouts ?? []).map((c, i) => (
             <li key={i} className={`callout ${c.severity}`}>
@@ -30,17 +47,13 @@ export default function Tactical() {
 
       <div className="stat-grid">
         <StatCard label="Opening-duel win rate" value={`${entries?.opening_duel_win_rate ?? 0}%`}
-          sub={`${entries?.opening_duels ?? 0} duels`}
-          tone={(entries?.opening_duel_win_rate ?? 0) >= 50 ? "good" : "bad"} />
+          sub={eGrade.sub || `${entries?.opening_duels ?? 0} duels`} tone={eGrade.tone} />
         <StatCard label="Deaths traded" value={`${trades?.deaths_traded_rate ?? 0}%`}
-          sub={`${trades?.traded_deaths ?? 0}/${trades?.tradeable_deaths ?? 0} tradeable · ${trades?.untradeable_deaths ?? 0} untradeable excl.`}
-          tone={(trades?.deaths_traded_rate ?? 0) >= 55 ? "good" : "bad"} />
+          sub={`${tGrade.sub} · ${trades?.untradeable_deaths ?? 0} untradeable excl.`} tone={tGrade.tone} />
         <StatCard label="Retake success" value={`${sites?.defense.retake_success_rate ?? 0}%`}
-          sub={`${sites?.defense.retake_opportunities ?? 0} retakes`}
-          tone={(sites?.defense.retake_success_rate ?? 0) >= 40 ? "good" : "bad"} />
+          sub={rGrade.sub || `${sites?.defense.retake_opportunities ?? 0} retakes`} tone={rGrade.tone} />
         <StatCard label="Post-plant conversion" value={`${sites?.attack.post_plant_conversion ?? 0}%`}
-          sub={`${sites?.attack.plants ?? 0} plants`}
-          tone={(sites?.attack.post_plant_conversion ?? 0) >= 70 ? "good" : "bad"} />
+          sub={pGrade.sub || `${sites?.attack.plants ?? 0} plants`} tone={pGrade.tone} />
       </div>
 
       <Section title="Entry duels by player">

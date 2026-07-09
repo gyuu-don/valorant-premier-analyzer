@@ -19,72 +19,95 @@ def _recent_form(contexts) -> list[str]:
     return ["W" if c.team_won else "L" for c in contexts]
 
 
-def _callouts(sides: dict, sites: dict, entries: dict, trades: dict) -> list[dict]:
-    """Turn key numbers into prioritized, human-readable improvement notes."""
+# Point margins (percentage points) for grading a metric against the opponent baseline.
+_BELOW = 3.0    # trailing the division by this much -> flag as a weakness
+_WELL_BELOW = 8.0
+_ABOVE = 5.0    # leading by this much -> call out as a strength
+
+
+def _grade(area: str, ours: float, theirs: float, tip: str, higher_is_better: bool = True) -> dict | None:
+    """Compare a metric to the opponent baseline and produce a relative callout."""
+    gap = (ours - theirs) if higher_is_better else (theirs - ours)
+    vs = f"{ours}% vs {theirs}% for opponents faced"
+    if gap <= -_WELL_BELOW:
+        return {"severity": "high", "area": area, "gap": round(gap, 1),
+                "text": f"{vs} — well below division norm. {tip}"}
+    if gap <= -_BELOW:
+        return {"severity": "medium", "area": area, "gap": round(gap, 1),
+                "text": f"{vs} — below division norm. {tip}"}
+    if gap >= _ABOVE:
+        return {"severity": "info", "area": area, "gap": round(gap, 1),
+                "text": f"{vs} — above division norm. This is a relative strength."}
+    return {"severity": "low", "area": area, "gap": round(gap, 1),
+            "text": f"{vs} — roughly on par with the division."}
+
+
+def _callouts(sides: dict, sites: dict, entries: dict, trades: dict, baseline: dict | None) -> list[dict]:
+    """Prioritized notes, benchmarked against the opponents actually faced when available."""
     notes: list[dict] = []
 
+    # Internal side balance is meaningful regardless of the opponent baseline.
     atk, dfn = sides["attack_win_rate"], sides["defense_win_rate"]
     if abs(atk - dfn) >= 8:
         weaker, wr = ("attack", atk) if atk < dfn else ("defense", dfn)
         notes.append({
-            "severity": "high",
-            "area": "Side balance",
+            "severity": "high", "area": "Side balance",
             "text": f"{weaker.capitalize()} is the weaker side at {wr}% round win rate "
                     f"(vs {max(atk, dfn)}% on the other side). Prioritize {weaker} setups in practice.",
         })
 
-    entry = entries["opening_duel_win_rate"]
-    if entry < 50 and entries["opening_duels"] > 0:
-        notes.append({
-            "severity": "high" if entry < 45 else "medium",
-            "area": "Entries",
-            "text": f"Opening-duel win rate is {entry}%. Consider structured entry support "
-                    f"(trade partners, flashes for the entry fragger) to flip first bloods.",
-        })
-
-    traded = trades["deaths_traded_rate"]
-    if traded < 55 and trades["total_deaths"] > 0:
-        notes.append({
-            "severity": "medium",
-            "area": "Trades",
-            "text": f"Only {traded}% of deaths are traded. Play tighter spacing so a "
-                    f"teammate can punish the killer within a few seconds.",
-        })
-
-    retake = sites["defense"]["retake_success_rate"]
-    if sites["defense"]["retake_opportunities"] >= 3 and retake < 40:
-        notes.append({
-            "severity": "medium",
-            "area": "Retakes",
-            "text": f"Retake success is {retake}%. Bank utility/ults for coordinated "
-                    f"post-plant retakes rather than picking duels.",
-        })
-
-    post_plant = sites["attack"]["post_plant_conversion"]
-    if sites["attack"]["plants"] >= 3 and post_plant < 70:
-        notes.append({
-            "severity": "low",
-            "area": "Post-plant",
-            "text": f"Post-plant conversion is {post_plant}%. Reinforce default post-plant "
-                    f"positions and crossfires to close out planted rounds.",
-        })
+    if baseline:
+        graded = [
+            _grade("Entries", entries["opening_duel_win_rate"], baseline["opening_duel_win_rate"],
+                   "Structure entry support: trade partners and flashes for the entry fragger."),
+            _grade("Trades", trades["deaths_traded_rate"], baseline["deaths_traded_rate"],
+                   "Play tighter spacing so a teammate can punish the killer within a few seconds."),
+            _grade("Retakes", sites["defense"]["retake_success_rate"], baseline["retake_success_rate"],
+                   "Bank utility/ults for coordinated post-plant retakes rather than picking duels."),
+            _grade("Post-plant", sites["attack"]["post_plant_conversion"], baseline["post_plant_conversion"],
+                   "Reinforce default post-plant positions and crossfires."),
+        ]
+        # Weaknesses first (largest negative gap), then strengths/par.
+        graded = [g for g in graded if g]
+        graded.sort(key=lambda g: g["gap"])
+        notes.extend(graded)
 
     if not notes:
         notes.append({
-            "severity": "info",
-            "area": "General",
-            "text": "No major weaknesses flagged from the current sample. Pull more matches "
-                    "for a higher-confidence read.",
+            "severity": "info", "area": "General",
+            "text": "No major gaps vs the opponents faced. Pull more matches for a higher-confidence read.",
         })
     return notes
 
 
+def _tactical_summary(contexts, window: int) -> dict:
+    """Compute the tactical metrics used for the opponent baseline comparison."""
+    data = all_breakdowns(contexts, window)
+    entries = compute_entries(data)
+    trades = compute_trades(data)
+    sites = compute_sites(data)
+    return {
+        "opening_duel_win_rate": entries["opening_duel_win_rate"],
+        "deaths_traded_rate": trades["deaths_traded_rate"],
+        "retake_success_rate": sites["defense"]["retake_success_rate"],
+        "post_plant_conversion": sites["attack"]["post_plant_conversion"],
+        "hold_success_rate": sites["defense"]["hold_success_rate"],
+    }
+
+
 def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
     contexts = []
+    opp_contexts = []
     for match in matches:
         ctx = build_context(match, team.id) if team.id else None
-        if ctx is not None:
-            contexts.append(ctx)
+        if ctx is None:
+            continue
+        contexts.append(ctx)
+        # Opponent context (for the division baseline) via the opposing roster.
+        opp_puuids = {p.puuid for p in match.players if p.team_id == ctx.opp_team_id and p.puuid}
+        octx = build_context(match, opp_puuids) if opp_puuids else None
+        if octx is not None:
+            opp_contexts.append(octx)
 
     if not contexts:
         return {
@@ -94,7 +117,8 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
                        "teams[].premier_roster and that the region is correct.",
         }
 
-    data = all_breakdowns(contexts, trade_window_ms_default())
+    window = trade_window_ms_default()
+    data = all_breakdowns(contexts, window)
 
     entries = compute_entries(data)
     trades = compute_trades(data)
@@ -104,6 +128,14 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
     utility = compute_utility(data)
     maps = compute_maps(contexts)
     mvp = compute_mvp(players, entries, trades)
+
+    # Opponent baseline ("the division you actually play").
+    baseline = _tactical_summary(opp_contexts, window) if opp_contexts else None
+    if baseline is not None:
+        opp_sides = compute_sides(opp_contexts)
+        baseline["attack_win_rate"] = opp_sides["attack_win_rate"]
+        baseline["defense_win_rate"] = opp_sides["defense_win_rate"]
+        baseline["matches"] = len(opp_contexts)
 
     wins = sum(1 for c in contexts if c.team_won)
 
@@ -121,7 +153,8 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
         "agents": maps["agents"],
         "players": list(players.values()),
         "mvp": mvp,
-        "callouts": _callouts(sides, sites, entries, trades),
+        "baseline": baseline,
+        "callouts": _callouts(sides, sites, entries, trades, baseline),
     }
 
 

@@ -77,6 +77,11 @@ npm run dev          # runs FastAPI + Vite together
 | **Match Deep-Dive** | Scoreboard + round-by-round timeline for a single match |
 
 ### Advanced metrics
+- **Opponent-relative baseline** — the app also analyzes the opponents you actually
+  faced and benchmarks your tactical metrics against them ("you 48% vs opponents 52%").
+  Callouts flag only where you trail *your own division*, so a low absolute number that's
+  normal for the division isn't misreported as a weakness. Great for lower divisions where
+  pro-level benchmarks don't apply.
 - **Advanced team MVP** — a composite *impact rating* (ACS, KAST, entry win rate, trade
   contribution, multikills, clutches, ADR; min-max normalized across the roster and
   weighted in `server/app/config.py`). Riot's raw-score MVP is shown alongside for contrast.
@@ -84,6 +89,9 @@ npm run dev          # runs FastAPI + Vite together
 - **Entries / trades / site play** — opening-duel win %, deaths-traded %, defense
   holds vs retakes, attack post-plant conversion. Side per round is inferred from spike
   plant events + the standard 12/12 half structure.
+- **Trade rate excludes untradeable deaths** — a death where you were the last player
+  alive (no teammate to avenge) is removed from the denominator, so the rate reflects only
+  situations where a trade was actually possible.
 
 ---
 

@@ -28,6 +28,18 @@ export interface Callout {
   severity: "high" | "medium" | "low" | "info";
   area: string;
   text: string;
+  gap?: number;
+}
+
+export interface Baseline {
+  opening_duel_win_rate: number;
+  deaths_traded_rate: number;
+  retake_success_rate: number;
+  post_plant_conversion: number;
+  hold_success_rate: number;
+  attack_win_rate: number;
+  defense_win_rate: number;
+  matches: number;
 }
 
 export interface Report {
@@ -97,5 +109,6 @@ export interface Report {
     official_mvp: { puuid: string; name: string; score: number } | null;
     method?: string;
   };
+  baseline?: Baseline | null;
   callouts?: Callout[];
 }
