@@ -47,7 +47,8 @@ def compute_mvp(
         components["adr"][puuid] = row["adr"]
         components["entry_win_rate"][puuid] = entry_pp.get(puuid, {}).get("entry_win_rate", 0.0)
         t = trade_pp.get(puuid, {})
-        untraded_deaths = t.get("deaths", 0) - t.get("deaths_traded", 0)
+        # Penalize only deaths that *could* have been traded but weren't.
+        untraded_deaths = t.get("tradeable_deaths", 0) - t.get("deaths_traded", 0)
         contribution = t.get("trade_kills", 0) - untraded_deaths
         components["trade_contribution"][puuid] = safe_div(contribution, rp)
         components["multikills"][puuid] = safe_div(row["multikill_rounds"], rp)

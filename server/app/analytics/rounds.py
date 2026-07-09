@@ -30,7 +30,9 @@ class RoundBreakdown:
     first_kill_by_us: Optional[bool] = None                          # True/False/None
     first_killer: Optional[str] = None
     first_victim: Optional[str] = None
-    traded_deaths: set[str] = field(default_factory=set)            # our deaths that were avenged
+    # Deaths where a teammate was still alive to avenge (excludes last-man-standing deaths).
+    tradeable_deaths: set[str] = field(default_factory=set)
+    traded_deaths: set[str] = field(default_factory=set)            # tradeable deaths that were avenged
     trade_kills_by_player: dict[str, int] = field(default_factory=dict)  # our trade kills
     clutch_puuid: Optional[str] = None
 
@@ -84,21 +86,30 @@ def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdo
             elif ctx.is_ours(first.victim.puuid):
                 rb.first_kill_by_us = False
 
-        # Trades: an enemy who killed one of ours is themselves killed by us within the window.
+        # Trades. Walk kills in time order tracking who on our side has already died.
+        # A death is only "tradeable" if a teammate was still alive at that moment
+        # (a last-man-standing death cannot be traded and is excluded from the rate).
+        # It is "traded" if that killer is killed by one of ours within the window.
+        our_dead: set[str] = set()
         for i, k in enumerate(round_kills):
             if not ctx.is_ours(k.victim.puuid):
                 continue
-            killer_puuid = k.killer.puuid
-            death_time = _kill_time(k)
-            for later in round_kills[i + 1:]:
-                if _kill_time(later) - death_time > trade_window_ms:
-                    break
-                if later.victim.puuid == killer_puuid and ctx.is_ours(later.killer.puuid):
-                    rb.traded_deaths.add(k.victim.puuid)
-                    rb.trade_kills_by_player[later.killer.puuid] = (
-                        rb.trade_kills_by_player.get(later.killer.puuid, 0) + 1
-                    )
-                    break
+            victim_puuid = k.victim.puuid
+            teammates_alive = ctx.our_puuids - our_dead - {victim_puuid}
+            if teammates_alive:
+                rb.tradeable_deaths.add(victim_puuid)
+                killer_puuid = k.killer.puuid
+                death_time = _kill_time(k)
+                for later in round_kills[i + 1:]:
+                    if _kill_time(later) - death_time > trade_window_ms:
+                        break
+                    if later.victim.puuid == killer_puuid and ctx.is_ours(later.killer.puuid):
+                        rb.traded_deaths.add(victim_puuid)
+                        rb.trade_kills_by_player[later.killer.puuid] = (
+                            rb.trade_kills_by_player.get(later.killer.puuid, 0) + 1
+                        )
+                        break
+            our_dead.add(victim_puuid)
 
         # Clutch (heuristic): we won, exactly one teammate survived, and they fragged.
         if won and len(rb.survivors) == 1:

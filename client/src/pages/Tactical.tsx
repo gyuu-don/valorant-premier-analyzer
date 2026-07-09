@@ -33,7 +33,7 @@ export default function Tactical() {
           sub={`${entries?.opening_duels ?? 0} duels`}
           tone={(entries?.opening_duel_win_rate ?? 0) >= 50 ? "good" : "bad"} />
         <StatCard label="Deaths traded" value={`${trades?.deaths_traded_rate ?? 0}%`}
-          sub={`${trades?.traded_deaths ?? 0}/${trades?.total_deaths ?? 0}`}
+          sub={`${trades?.traded_deaths ?? 0}/${trades?.tradeable_deaths ?? 0} tradeable · ${trades?.untradeable_deaths ?? 0} untradeable excl.`}
           tone={(trades?.deaths_traded_rate ?? 0) >= 55 ? "good" : "bad"} />
         <StatCard label="Retake success" value={`${sites?.defense.retake_success_rate ?? 0}%`}
           sub={`${sites?.defense.retake_opportunities ?? 0} retakes`}
@@ -59,14 +59,15 @@ export default function Tactical() {
         </table>
       </Section>
 
-      <Section title="Trades by player">
+      <Section title="Trades by player" note="Traded % is over tradeable deaths only — last-man-standing deaths (nobody alive to trade) are excluded.">
         <table className="data-table">
-          <thead><tr><th>Player</th><th>Deaths</th><th>Deaths traded</th><th>Traded %</th><th>Trade kills</th></tr></thead>
+          <thead><tr><th>Player</th><th>Deaths</th><th>Tradeable</th><th>Deaths traded</th><th>Traded %</th><th>Trade kills</th></tr></thead>
           <tbody>
             {Object.entries(trades?.per_player ?? {}).map(([puuid, t]) => (
               <tr key={puuid}>
                 <td className="name-cell">{nameOf(data, puuid)}</td>
                 <td>{t.deaths}</td>
+                <td>{t.tradeable_deaths}</td>
                 <td>{t.deaths_traded}</td>
                 <td>{t.deaths_traded_rate}%</td>
                 <td>{t.trade_kills}</td>

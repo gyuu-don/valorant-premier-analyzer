@@ -31,12 +31,48 @@ def test_entries(data):
 
 def test_trades(data):
     t = compute_trades(data)
-    # Both of our deaths (p2 in R0, p1 in R1) are avenged within the window.
+    # Both of our deaths (p2 in R0, p1 in R1) had teammates alive and were avenged.
     assert t["total_deaths"] == 2
+    assert t["tradeable_deaths"] == 2
+    assert t["untradeable_deaths"] == 0
     assert t["traded_deaths"] == 2
     assert t["deaths_traded_rate"] == 100.0
     assert t["per_player"]["p3"]["trade_kills"] == 1
     assert t["per_player"]["p2"]["trade_kills"] == 1
+
+
+def test_trades_exclude_untradeable_last_man():
+    """A last-man-standing death must not count against the trade rate."""
+    import json
+    from app.analytics.common import build_context
+    from app.analytics.rounds import all_breakdowns
+    from app.models import MatchV4
+
+    # 2v2 round: e1 kills p1 (teammate p2 alive -> tradeable); p2 avenges by killing e1
+    # (p1 traded); then e2 kills p2 (p1 already dead -> last man -> untradeable).
+    match = MatchV4.parse({
+        "metadata": {"map": {"name": "Bind"}},
+        "players": [
+            {"puuid": "p1", "team_id": "Red"}, {"puuid": "p2", "team_id": "Red"},
+            {"puuid": "e1", "team_id": "Blue"}, {"puuid": "e2", "team_id": "Blue"},
+        ],
+        "teams": [{"team_id": "Red", "won": False}, {"team_id": "Blue", "won": True}],
+        "rounds": [{"id": 0, "winning_team": "Blue", "plant": None}],
+        "kills": [
+            {"round": 0, "time_in_round_in_ms": 1000, "killer": {"puuid": "e1"}, "victim": {"puuid": "p1"}},
+            {"round": 0, "time_in_round_in_ms": 2000, "killer": {"puuid": "p2"}, "victim": {"puuid": "e1"}},
+            {"round": 0, "time_in_round_in_ms": 3000, "killer": {"puuid": "e2"}, "victim": {"puuid": "p2"}},
+        ],
+    })
+    ctx = build_context(match, {"p1", "p2"})
+    assert ctx is not None
+    t = compute_trades(all_breakdowns([ctx], 4000))
+    assert t["total_deaths"] == 2          # p1 and p2 both died
+    assert t["tradeable_deaths"] == 1      # only p1's death could be traded
+    assert t["untradeable_deaths"] == 1    # p2 died last-man-standing
+    assert t["traded_deaths"] == 1         # p1 was avenged
+    # Rate uses tradeable denominator: 1/1 = 100%, NOT the misleading 1/2 = 50%.
+    assert t["deaths_traded_rate"] == 100.0
 
 
 def test_sites(data):

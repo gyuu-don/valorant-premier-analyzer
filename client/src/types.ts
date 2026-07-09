@@ -79,8 +79,10 @@ export interface Report {
   trades?: {
     deaths_traded_rate: number;
     total_deaths: number;
+    tradeable_deaths: number;
+    untradeable_deaths: number;
     traded_deaths: number;
-    per_player: Record<string, { deaths: number; deaths_traded: number; trade_kills: number; deaths_traded_rate: number }>;
+    per_player: Record<string, { deaths: number; tradeable_deaths: number; deaths_traded: number; trade_kills: number; deaths_traded_rate: number }>;
   };
   utility?: {
     note: string;
