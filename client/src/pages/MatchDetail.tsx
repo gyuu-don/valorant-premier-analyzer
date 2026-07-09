@@ -251,11 +251,13 @@ function MatchView({ data }: { data: any }) {
               <span className="subtle">{gameMvp.acs} ACS · {gameMvp.kills}/{gameMvp.deaths}/{gameMvp.assists}</span>
             </div>
           )}
-          <MvpRanking
-            ranking={ourTeamRanking}
-            weights={analysis?.mvp?.weights}
-            weightTotal={analysis?.mvp?.weight_total}
-          />
+          <div className="match-mvp-ranking">
+            <MvpRanking
+              ranking={ourTeamRanking}
+              weights={analysis?.mvp?.weights}
+              weightTotal={analysis?.mvp?.weight_total}
+            />
+          </div>
         </Section>
       )}
 

@@ -237,6 +237,8 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 /* MVP ranking table: short name column, wide impact column. */
 .mini-table { width: 100%; table-layout: fixed; }
 .mini-table col.mvp-col-name { width: 170px; }
+/* Match Analysis Team MVP: a touch wider so longer names aren't clipped by the bar. */
+.match-mvp-ranking .mini-table col.mvp-col-name { width: 250px; }
 .mini-table col.mvp-col-impact { width: auto; }
 .mini-table td:first-child,
 .mini-table th:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
