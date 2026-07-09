@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: valorant-premier-analyzer
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: HENRIK_API_KEY      # secret — set in the Render dashboard
+        sync: false
+      - key: PREMIER_TEAM_NAME
+        value: THEIRONONES
+      - key: PREMIER_TEAM_TAG
+        value: IRON
+      - key: PREMIER_REGION
+        value: na
+      - key: MAX_MATCHES
+        value: "25"
+      - key: TRADE_WINDOW_MS
+        value: "3000"

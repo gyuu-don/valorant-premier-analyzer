@@ -105,6 +105,30 @@ npm run dev          # runs FastAPI + Vite together
 
 ---
 
+## Deploy to the web (Render, free)
+
+In production the app runs as a **single service** — FastAPI serves both the API and the
+built React frontend on one origin — so it deploys as one container. The included
+`Dockerfile` builds the frontend and serves everything; `render.yaml` wires up the service.
+
+1. Push this repo to GitHub.
+2. On [Render](https://render.com): **New → Blueprint** and pick the repo (it reads
+   `render.yaml`), or **New → Web Service → Docker**.
+3. Set the **`HENRIK_API_KEY`** environment variable (secret) in the dashboard.
+   `PREMIER_TEAM_NAME` / `PREMIER_TEAM_TAG` / `PREMIER_REGION` default from `render.yaml` —
+   edit them there if needed.
+4. Deploy — you'll get a `https://<name>.onrender.com` URL to share.
+
+**Free-tier notes:** the service spins down after ~15 min idle, so the first visit after a
+lull takes ~30–60s to wake, then it's fast. The in-memory cache resets on spin-down and
+re-warms on the next load. There's **no login** — anyone with the URL can view (the API key
+stays server-side; HenrikDev caching + a small user count keep well within rate limits).
+
+> Same single-container setup runs anywhere Docker does — e.g. Fly.io (`fly launch`) or a
+> cheap VPS — if you'd rather avoid cold starts (~$2–5/mo).
+
+---
+
 ## What it shows
 
 | Page | Content |
