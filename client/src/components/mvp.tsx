@@ -1,4 +1,5 @@
 import { InfoLabel, Section, WinRateBar } from "./common";
+import { playerCardImage } from "../media";
 import type { MvpEntry, Report } from "../types";
 
 export const COMPONENT_LABELS: Record<string, string> = {
@@ -66,6 +67,9 @@ export function TeamMvpSection({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
     <Section title="Advanced Team MVP">
       <div className="mvp-row">
         <div className="mvp-card">
+          {playerCardImage(mvp.mvp.card) && (
+            <img className="player-card-lg mvp-card-img" src={playerCardImage(mvp.mvp.card)!} alt={mvp.mvp.name} />
+          )}
           <div className="mvp-name">{mvp.mvp.name}</div>
           <div className="mvp-rating">{mvp.mvp.rating}</div>
           <div className="stat-label">Impact rating (0–100)</div>
@@ -191,7 +195,14 @@ export function MvpRanking({
       <tbody>
         {ranking.map((r) => (
           <tr key={r.puuid}>
-            <td>{r.name}</td>
+            <td>
+              <span className="agent-inline">
+                {playerCardImage(r.card)
+                  ? <img className="agent-face-sm" src={playerCardImage(r.card)!} alt="" loading="lazy" />
+                  : <span className="agent-face-sm agent-face-ph">{r.name[0]}</span>}
+                {r.name}
+              </span>
+            </td>
             <td><ImpactCell entry={r} weights={weights} weightTotal={weightTotal} /></td>
           </tr>
         ))}

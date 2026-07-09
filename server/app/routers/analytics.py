@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.analytics.report import build_report
+from app.analytics.report import build_map_detail, build_report
 from app.config import get_settings
 from app.henrik import endpoints
 from app.henrik.client import HenrikError
@@ -36,3 +36,25 @@ async def get_report(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
     return build_report(team, matches)
+
+
+@router.get("/map-detail")
+async def get_map_detail(
+    name: str | None = Query(default=None),
+    tag: str | None = Query(default=None),
+    season: str | None = Query(default=None, description="Premier stage id to filter by"),
+):
+    """Per-map cumulative heatmap positions + agent usage for the stage."""
+    settings = get_settings()
+    name = name or settings.premier_team_name
+    tag = tag or settings.premier_team_tag
+    limit = 100 if season else settings.max_matches
+    if not name or not tag:
+        raise HTTPException(status_code=400, detail="No team configured (set PREMIER_TEAM_* or pass ?name=&tag=).")
+    try:
+        team = await endpoints.get_team(name, tag)
+        matches = await endpoints.load_recent_matches(team, limit, season_id=season)
+    except HenrikError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+    return build_map_detail(team, matches)

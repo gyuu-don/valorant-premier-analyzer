@@ -33,6 +33,11 @@ export interface Stage {
 
 export const fetchStages = () => getJson<{ stages: Stage[] }>("/api/stages");
 
+export const fetchMapDetail = (season?: string | null) => {
+  const qs = seasonParam(season);
+  return getJson<import("./types").MapDetail>(`/api/analytics/map-detail${qs ? `?${qs}` : ""}`);
+};
+
 export const fetchTeam = () => getJson<any>("/api/team");
 
 export const fetchTeamHistory = () =>

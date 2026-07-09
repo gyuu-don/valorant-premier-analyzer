@@ -9,6 +9,7 @@ def _new_row(puuid: str) -> dict:
     return {
         "puuid": puuid,
         "name": None,
+        "card": None,
         "agents": {},
         "rounds_played": 0,
         "kills": 0,
@@ -37,6 +38,9 @@ def compute_players(
                 continue
             row = rows.setdefault(p.puuid, _new_row(p.puuid))
             row["name"] = p.display_name
+            # Contexts are most-recent first, so keep the first card seen.
+            if not row["card"] and p.customization.card:
+                row["card"] = p.customization.card
             if p.agent.name:
                 row["agents"][p.agent.name] = row["agents"].get(p.agent.name, 0) + 1
             row["rounds_played"] += rounds_count

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from app.analytics.common import build_context, pct
+from app.analytics.match_analysis import team_positions
 from app.analytics.entries import compute_entries
 from app.analytics.maps import compute_maps
 from app.analytics.mvp import compute_mvp
@@ -94,6 +95,40 @@ def _callouts(sides: dict, sites: dict, entries: dict, trades: dict, baseline: d
             "text": "No major gaps vs the opponents faced. Pull more matches for a higher-confidence read.",
         })
     return notes
+
+
+def compute_map_detail(contexts) -> dict:
+    """Per-map cumulative positions (deaths/kills/plants across all matches on that map)
+    plus per-map agent usage. Positions share the map's coordinate system, so pooling
+    across matches on the same map is valid."""
+    detail: dict[str, dict] = {}
+    for ctx in contexts:
+        name = ctx.match.metadata.map_name
+        d = detail.setdefault(
+            name, {"positions": {"deaths": [], "kills": [], "plants": []}, "_agents": {}}
+        )
+        pos = team_positions(ctx)
+        for key in ("deaths", "kills", "plants"):
+            d["positions"][key].extend(pos[key])
+        for p in ctx.our_players():
+            if p.agent.name:
+                a = d["_agents"].setdefault(p.agent.name, {"games": 0, "wins": 0})
+                a["games"] += 1
+                a["wins"] += int(ctx.team_won)
+
+    out: dict[str, dict] = {}
+    for name, d in detail.items():
+        agents = {
+            an: {"games": v["games"], "wins": v["wins"], "win_rate": pct(v["wins"], v["games"])}
+            for an, v in sorted(d["_agents"].items(), key=lambda kv: -kv[1]["games"])
+        }
+        out[name] = {"positions": d["positions"], "agents": agents}
+    return out
+
+
+def build_map_detail(team: PremierTeam, matches: list[MatchV4]) -> dict:
+    contexts = [c for c in (build_context(m, team.id) if team.id else None for m in matches) if c]
+    return {"maps": compute_map_detail(contexts)}
 
 
 def build_match_summaries(team: PremierTeam, matches: list[MatchV4]) -> list[dict]:

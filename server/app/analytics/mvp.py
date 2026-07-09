@@ -70,6 +70,7 @@ def compute_mvp(
             {
                 "puuid": puuid,
                 "name": row["name"],
+                "card": row.get("card"),
                 "rating": rating,
                 "components": breakdown,
             }

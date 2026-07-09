@@ -7,6 +7,7 @@ import { useReport } from "../hooks";
 import { fetchAgentIcons } from "../agents";
 import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
 import { TeamMvpSection } from "../components/mvp";
+import { playerCardImage } from "../media";
 import type { PlayerRow } from "../types";
 
 const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
@@ -23,6 +24,7 @@ const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
 const RADAR_MAX: Record<string, number> = {
   ACS: 300, "K/D": 2, ADR: 200, "KAST%": 100, "HS%": 40,
 };
+
 
 export default function Players() {
   const { data, isLoading, error } = useReport();
@@ -65,7 +67,14 @@ export default function Players() {
                 className={p.puuid === active.puuid ? "selected" : ""}
                 onClick={() => setSelected(p.puuid)}
               >
-                <td className="name-cell">{p.name}</td>
+                <td className="name-cell">
+                  <span className="agent-inline">
+                    {playerCardImage(p.card)
+                      ? <img className="agent-face-sm" src={playerCardImage(p.card)!} alt="" loading="lazy" />
+                      : <span className="agent-face-sm agent-face-ph">{p.name[0]}</span>}
+                    {p.name}
+                  </span>
+                </td>
                 {COLS.map((c) => <td key={c.label}>{p[c.key] as number}</td>)}
               </tr>
             ))}
@@ -75,6 +84,15 @@ export default function Players() {
       </Section>
 
       <Section title={`Profile — ${active.name}`}>
+        <div className="profile-head">
+          {playerCardImage(active.card)
+            ? <img className="player-card-lg" src={playerCardImage(active.card)!} alt={active.name} />
+            : <span className="player-card-lg player-card-ph">{active.name[0]}</span>}
+          <div>
+            <div className="pc-name">{active.name}</div>
+            <div className="subtle">{active.agents.map((a) => a.name).slice(0, 3).join(", ")}</div>
+          </div>
+        </div>
         <div className="profile">
           <div className="radar-wrap">
             <ResponsiveContainer width="100%" height={260}>

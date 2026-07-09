@@ -25,7 +25,7 @@ def _ctx_for_team(match: MatchV4, team_id: str):
     return build_context(match, puuids) if puuids else None
 
 
-def _positions(ctx) -> dict:
+def team_positions(ctx) -> dict:
     """Our team's death / kill / plant coordinates (raw game units), each tagged with
     side, pre/post-plant phase, and the involved player's puuid (for filtering)."""
     match = ctx.match
@@ -179,7 +179,7 @@ def build_match_analysis(
         row["impact_components"] = r["components"] if r else {}
 
     our_ctx = contexts_by_team.get(our_team_id) if our_team_id else None
-    positions = _positions(our_ctx) if our_ctx else {"deaths": [], "kills": [], "plants": []}
+    positions = team_positions(our_ctx) if our_ctx else {"deaths": [], "kills": [], "plants": []}
     site_tendencies = _site_tendencies(our_ctx) if our_ctx else None
 
     return {

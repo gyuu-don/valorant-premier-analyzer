@@ -84,6 +84,12 @@ class AbilityCasts(_Base):
         return self.grenade + self.ability1 + self.ability2 + self.ultimate
 
 
+class PlayerCustomization(_Base):
+    card: Optional[str] = None      # player-card UUID (valorant-api playercards)
+    title: Optional[str] = None
+    preferred_level_border: Optional[str] = None
+
+
 class MatchPlayer(_Base):
     puuid: Optional[str] = None
     name: Optional[str] = None
@@ -92,6 +98,7 @@ class MatchPlayer(_Base):
     agent: AgentInfo = Field(default_factory=AgentInfo)
     stats: PlayerStats = Field(default_factory=PlayerStats)
     ability_casts: AbilityCasts = Field(default_factory=AbilityCasts)
+    customization: PlayerCustomization = Field(default_factory=PlayerCustomization)
 
     @property
     def display_name(self) -> str:

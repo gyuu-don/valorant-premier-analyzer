@@ -3,6 +3,7 @@
 export interface PlayerRow {
   puuid: string;
   name: string;
+  card?: string | null;
   rounds_played: number;
   kills: number;
   deaths: number;
@@ -20,6 +21,7 @@ export interface PlayerRow {
 export interface MvpEntry {
   puuid: string;
   name: string;
+  card?: string | null;
   rating: number;
   components: Record<string, number>;
 }
@@ -93,6 +95,16 @@ export interface MatchAnalysis {
     attack_sites: Record<string, { plants: number; share: number; win_rate: number }>;
     retake_sites: Record<string, { opportunities: number; win_rate: number }>;
   } | null;
+}
+
+export interface MapDetail {
+  maps: Record<
+    string,
+    {
+      positions: NonNullable<MatchAnalysis["positions"]>;
+      agents: Record<string, { games: number; wins: number; win_rate: number }>;
+    }
+  >;
 }
 
 export interface Baseline {
