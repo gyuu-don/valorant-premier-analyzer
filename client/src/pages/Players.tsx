@@ -1,0 +1,94 @@
+import { useState } from "react";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
+} from "recharts";
+import { useReport } from "../hooks";
+import { ErrorBox, Loading, Section } from "../components/common";
+import type { PlayerRow } from "../types";
+
+const COLS: { key: keyof PlayerRow; label: string }[] = [
+  { key: "acs", label: "ACS" },
+  { key: "kd", label: "K/D" },
+  { key: "adr", label: "ADR" },
+  { key: "kast", label: "KAST%" },
+  { key: "hs_pct", label: "HS%" },
+  { key: "multikill_rounds", label: "Multikills" },
+  { key: "clutches", label: "Clutches" },
+];
+
+// Rough per-metric maxima used to scale the radar to 0..100.
+const RADAR_MAX: Record<string, number> = {
+  ACS: 300, "K/D": 2, ADR: 200, "KAST%": 100, "HS%": 40,
+};
+
+export default function Players() {
+  const { data, isLoading, error } = useReport();
+  const [selected, setSelected] = useState<string | null>(null);
+  if (isLoading) return <Loading />;
+  if (error) return <ErrorBox error={error} />;
+  const players = (data?.players ?? []).slice().sort((a, b) => b.acs - a.acs);
+  if (players.length === 0) return <div className="notice">No player data.</div>;
+
+  const active = players.find((p) => p.puuid === selected) ?? players[0];
+  const radarData = [
+    { metric: "ACS", v: scale(active.acs, RADAR_MAX["ACS"]) },
+    { metric: "K/D", v: scale(active.kd, RADAR_MAX["K/D"]) },
+    { metric: "ADR", v: scale(active.adr, RADAR_MAX["ADR"]) },
+    { metric: "KAST%", v: active.kast },
+    { metric: "HS%", v: scale(active.hs_pct, RADAR_MAX["HS%"]) },
+  ];
+
+  return (
+    <div className="page">
+      <div className="page-head"><h1>Player Performance</h1></div>
+      <Section title="Roster stats">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Player</th><th>Agents</th>
+              {COLS.map((c) => <th key={c.label}>{c.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {players.map((p) => (
+              <tr
+                key={p.puuid}
+                className={p.puuid === active.puuid ? "selected" : ""}
+                onClick={() => setSelected(p.puuid)}
+              >
+                <td className="name-cell">{p.name}</td>
+                <td className="subtle">{p.agents.map((a) => a.name).slice(0, 3).join(", ")}</td>
+                {COLS.map((c) => <td key={c.label}>{p[c.key] as number}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="hint">Click a player to see their profile.</p>
+      </Section>
+
+      <Section title={`Profile — ${active.name}`}>
+        <div className="profile">
+          <div className="radar-wrap">
+            <ResponsiveContainer width="100%" height={260}>
+              <RadarChart data={radarData} outerRadius="75%">
+                <PolarGrid stroke="#333" />
+                <PolarAngleAxis dataKey="metric" tick={{ fill: "#aab", fontSize: 12 }} />
+                <Radar dataKey="v" stroke="#ff4655" fill="#ff4655" fillOpacity={0.4} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="profile-stats">
+            <div><span>Kills / Deaths / Assists</span><strong>{active.kills} / {active.deaths} / {active.assists}</strong></div>
+            <div><span>Rounds played</span><strong>{active.rounds_played}</strong></div>
+            <div><span>Multikill rounds</span><strong>{active.multikill_rounds}</strong></div>
+            <div><span>Clutches</span><strong>{active.clutches}</strong></div>
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function scale(v: number, max: number) {
+  return Math.round(Math.min(100, (100 * v) / max));
+}

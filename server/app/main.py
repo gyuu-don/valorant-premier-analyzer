@@ -1,0 +1,54 @@
+"""FastAPI application entrypoint.
+
+Run from the server/ directory:
+    uvicorn app.main:app --reload --port 8000
+"""
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
+from app.henrik.client import client
+from app.routers import analytics, match, team
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await client.close()
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+    app = FastAPI(
+        title="Valorant Premier Team Analyzer",
+        description="Analyze a Valorant Premier team's match performance (HenrikDev API).",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_methods=["GET"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(team.router)
+    app.include_router(match.router)
+    app.include_router(analytics.router)
+
+    @app.get("/api/health")
+    async def health() -> dict:
+        return {
+            "status": "ok",
+            "team_configured": settings.has_team_config,
+            "api_key_present": bool(settings.henrik_api_key),
+        }
+
+    return app
+
+
+app = create_app()

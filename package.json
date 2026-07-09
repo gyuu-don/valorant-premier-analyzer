@@ -1,0 +1,16 @@
+{
+  "name": "valorant-premier-analyzer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Analyze a Valorant Premier team's match performance (HenrikDev API).",
+  "scripts": {
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "cd server && .venv/bin/uvicorn app.main:app --reload --port 8000",
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "npm --prefix client run build",
+    "test:server": "cd server && .venv/bin/pytest -q"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

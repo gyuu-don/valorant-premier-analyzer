@@ -1,0 +1,92 @@
+"""Deterministic analytics tests against the saved sample match fixture (no network)."""
+from __future__ import annotations
+
+from app.analytics.entries import compute_entries
+from app.analytics.maps import compute_maps
+from app.analytics.mvp import compute_mvp
+from app.analytics.players import compute_players
+from app.analytics.report import build_report
+from app.analytics.sides import compute_sides
+from app.analytics.sites import compute_sites
+from app.analytics.trades import compute_trades
+
+
+def test_context_identifies_our_team(context):
+    assert context.our_team_id == "Red"
+    assert context.team_won is True
+    assert context.our_puuids == {"p1", "p2", "p3", "p4", "p5"}
+    # Round 0 anchored to attack (Red planted); both rounds are first-half attack.
+    assert context.round_sides == {0: "attack", 1: "attack"}
+
+
+def test_entries(data):
+    e = compute_entries(data)
+    # Round 0: p1 gets the first kill (win). Round 1: p1 is first to die (loss).
+    assert e["opening_duels"] == 2
+    assert e["opening_duel_win_rate"] == 50.0
+    assert e["per_player"]["p1"]["first_kills"] == 1
+    assert e["per_player"]["p1"]["first_deaths"] == 1
+    assert e["per_player"]["p1"]["entry_win_rate"] == 50.0
+
+
+def test_trades(data):
+    t = compute_trades(data)
+    # Both of our deaths (p2 in R0, p1 in R1) are avenged within the window.
+    assert t["total_deaths"] == 2
+    assert t["traded_deaths"] == 2
+    assert t["deaths_traded_rate"] == 100.0
+    assert t["per_player"]["p3"]["trade_kills"] == 1
+    assert t["per_player"]["p2"]["trade_kills"] == 1
+
+
+def test_sites(data):
+    s = compute_sites(data)
+    # Round 0 is a planted attack round we won.
+    assert s["attack"]["plants"] == 1
+    assert s["attack"]["post_plant_conversion"] == 100.0
+    assert s["attack"]["round_win_rate"] == 50.0
+
+
+def test_sides_and_economy(context):
+    s = compute_sides([context])
+    assert s["attack_win_rate"] == 50.0
+    assert s["attack_rounds"] == 2
+    # R0 full-buy win, R1 eco loss.
+    assert s["economy"]["full_buy"]["win_rate"] == 100.0
+    assert s["economy"]["eco"]["win_rate"] == 0.0
+
+
+def test_players(data):
+    p = compute_players(data)
+    assert "p1" in p
+    # ACS = total score / rounds played (5000 / 2).
+    assert p["p1"]["acs"] == 2500.0
+    assert p["p1"]["kills"] == 20
+    assert p["p1"]["agents"][0]["name"] == "Jett"
+
+
+def test_mvp(data):
+    players = compute_players(data)
+    entries = compute_entries(data)
+    trades = compute_trades(data)
+    mvp = compute_mvp(players, entries, trades)
+    assert len(mvp["ranking"]) == 5
+    assert mvp["mvp"] is not None
+    assert 0.0 <= mvp["mvp"]["rating"] <= 100.0
+    # p1 has the highest raw score, so is the "official" MVP.
+    assert mvp["official_mvp"]["puuid"] == "p1"
+
+
+def test_maps(context):
+    m = compute_maps([context])
+    assert m["maps"]["Ascent"]["games"] == 1
+    assert m["maps"]["Ascent"]["wins"] == 1
+    assert "Jett" in m["agents"]
+
+
+def test_build_report(team, match):
+    report = build_report(team, [match])
+    assert report["matches_analyzed"] == 1
+    assert report["record"] == {"wins": 1, "losses": 0}
+    assert report["mvp"]["mvp"] is not None
+    assert len(report["callouts"]) >= 1

@@ -1,0 +1,117 @@
+"""Per-round breakdown shared by every analyzer.
+
+Parsing kill order once per round yields everything the entry / trade / clutch / KAST /
+site logic needs, keeping those modules small and independently testable.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Optional
+
+from app.analytics.common import MatchContext
+from app.models import Kill
+
+
+def _kill_time(k: Kill) -> int:
+    return k.time_in_round_in_ms if k.time_in_round_in_ms is not None else 10**9
+
+
+@dataclass
+class RoundBreakdown:
+    index: int
+    side: str                       # "attack" / "defense" for our team
+    won: bool
+    we_planted: bool = False
+    enemy_planted: bool = False
+    kills_by_player: dict[str, int] = field(default_factory=dict)   # our kills
+    assists_by_player: dict[str, int] = field(default_factory=dict)  # our assists
+    deaths: set[str] = field(default_factory=set)                   # our players who died
+    survivors: set[str] = field(default_factory=set)                # our players alive at end
+    first_kill_by_us: Optional[bool] = None                          # True/False/None
+    first_killer: Optional[str] = None
+    first_victim: Optional[str] = None
+    traded_deaths: set[str] = field(default_factory=set)            # our deaths that were avenged
+    trade_kills_by_player: dict[str, int] = field(default_factory=dict)  # our trade kills
+    clutch_puuid: Optional[str] = None
+
+
+def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdown]:
+    match = ctx.match
+    our = ctx.our_puuids
+
+    # Group kills by their round number, normalizing 0- vs 1-based indexing.
+    kills_by_round: dict[int, list[Kill]] = {}
+    for k in match.kills:
+        if k.round is None:
+            continue
+        kills_by_round.setdefault(k.round, []).append(k)
+    kill_base = min(kills_by_round) if kills_by_round else 0
+
+    breakdowns: list[RoundBreakdown] = []
+    for idx, rnd in enumerate(match.rounds):
+        side = ctx.round_sides.get(idx, "attack")
+        won = rnd.winning_team == ctx.our_team_id if rnd.winning_team else False
+
+        we_planted = bool(rnd.plant and rnd.plant.player.team == ctx.our_team_id)
+        enemy_planted = bool(rnd.plant and rnd.plant.player.team not in (None, ctx.our_team_id))
+
+        rb = RoundBreakdown(
+            index=idx, side=side, won=won,
+            we_planted=we_planted, enemy_planted=enemy_planted,
+        )
+
+        round_kills = sorted(kills_by_round.get(idx + kill_base, []), key=_kill_time)
+
+        # Kills / deaths / assists for our players.
+        for k in round_kills:
+            if ctx.is_ours(k.killer.puuid):
+                rb.kills_by_player[k.killer.puuid] = rb.kills_by_player.get(k.killer.puuid, 0) + 1
+            if ctx.is_ours(k.victim.puuid):
+                rb.deaths.add(k.victim.puuid)
+            for a in k.assistants:
+                if ctx.is_ours(a.puuid):
+                    rb.assists_by_player[a.puuid] = rb.assists_by_player.get(a.puuid, 0) + 1
+
+        rb.survivors = {p for p in our if p not in rb.deaths}
+
+        # Opening duel: first kill event of the round.
+        if round_kills:
+            first = round_kills[0]
+            rb.first_killer = first.killer.puuid
+            rb.first_victim = first.victim.puuid
+            if ctx.is_ours(first.killer.puuid):
+                rb.first_kill_by_us = True
+            elif ctx.is_ours(first.victim.puuid):
+                rb.first_kill_by_us = False
+
+        # Trades: an enemy who killed one of ours is themselves killed by us within the window.
+        for i, k in enumerate(round_kills):
+            if not ctx.is_ours(k.victim.puuid):
+                continue
+            killer_puuid = k.killer.puuid
+            death_time = _kill_time(k)
+            for later in round_kills[i + 1:]:
+                if _kill_time(later) - death_time > trade_window_ms:
+                    break
+                if later.victim.puuid == killer_puuid and ctx.is_ours(later.killer.puuid):
+                    rb.traded_deaths.add(k.victim.puuid)
+                    rb.trade_kills_by_player[later.killer.puuid] = (
+                        rb.trade_kills_by_player.get(later.killer.puuid, 0) + 1
+                    )
+                    break
+
+        # Clutch (heuristic): we won, exactly one teammate survived, and they fragged.
+        if won and len(rb.survivors) == 1:
+            survivor = next(iter(rb.survivors))
+            if rb.kills_by_player.get(survivor, 0) >= 1:
+                rb.clutch_puuid = survivor
+
+        breakdowns.append(rb)
+
+    return breakdowns
+
+
+def all_breakdowns(
+    contexts: list[MatchContext], trade_window_ms: int
+) -> list[tuple[MatchContext, list[RoundBreakdown]]]:
+    return [(ctx, analyze_rounds(ctx, trade_window_ms)) for ctx in contexts]

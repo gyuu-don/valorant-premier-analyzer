@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "match_id": "test-match-0001",
+    "map": { "id": "map-ascent", "name": "Ascent" },
+    "started_at": "2026-06-01T18:00:00Z",
+    "queue": { "id": "premier", "name": "Premier", "mode_type": "Standard" },
+    "region": "na"
+  },
+  "players": [
+    { "puuid": "p1", "name": "Player1", "tag": "NA1", "team_id": "Red", "agent": { "name": "Jett" },
+      "stats": { "score": 5000, "kills": 20, "deaths": 10, "assists": 4, "headshots": 30, "bodyshots": 60, "legshots": 10, "damage": { "dealt": 3600, "received": 2000 } },
+      "ability_casts": { "grenade": 6, "ability1": 8, "ability2": 4, "ultimate": 2 } },
+    { "puuid": "p2", "name": "Player2", "tag": "NA1", "team_id": "Red", "agent": { "name": "Sova" },
+      "stats": { "score": 4200, "kills": 16, "deaths": 12, "assists": 9, "headshots": 20, "bodyshots": 55, "legshots": 8, "damage": { "dealt": 3000, "received": 2500 } },
+      "ability_casts": { "grenade": 10, "ability1": 12, "ability2": 6, "ultimate": 3 } },
+    { "puuid": "p3", "name": "Player3", "tag": "NA1", "team_id": "Red", "agent": { "name": "Omen" },
+      "stats": { "score": 3800, "kills": 14, "deaths": 13, "assists": 7, "headshots": 15, "bodyshots": 50, "legshots": 9, "damage": { "dealt": 2700, "received": 2600 } },
+      "ability_casts": { "grenade": 8, "ability1": 9, "ability2": 5, "ultimate": 2 } },
+    { "puuid": "p4", "name": "Player4", "tag": "NA1", "team_id": "Red", "agent": { "name": "Killjoy" },
+      "stats": { "score": 3500, "kills": 12, "deaths": 14, "assists": 6, "headshots": 12, "bodyshots": 48, "legshots": 10, "damage": { "dealt": 2500, "received": 2700 } },
+      "ability_casts": { "grenade": 7, "ability1": 10, "ability2": 6, "ultimate": 1 } },
+    { "puuid": "p5", "name": "Player5", "tag": "NA1", "team_id": "Red", "agent": { "name": "Raze" },
+      "stats": { "score": 3300, "kills": 11, "deaths": 15, "assists": 5, "headshots": 10, "bodyshots": 45, "legshots": 12, "damage": { "dealt": 2400, "received": 2800 } },
+      "ability_casts": { "grenade": 12, "ability1": 6, "ability2": 4, "ultimate": 2 } },
+    { "puuid": "e1", "name": "Enemy1", "tag": "NA2", "team_id": "Blue", "agent": { "name": "Chamber" },
+      "stats": { "score": 4000, "kills": 15, "deaths": 14, "assists": 3, "headshots": 18, "bodyshots": 52, "legshots": 7, "damage": { "dealt": 2900, "received": 2900 } },
+      "ability_casts": { "grenade": 5, "ability1": 7, "ability2": 3, "ultimate": 2 } },
+    { "puuid": "e2", "name": "Enemy2", "tag": "NA2", "team_id": "Blue", "agent": { "name": "Sage" },
+      "stats": { "score": 3600, "kills": 13, "deaths": 15, "assists": 8, "headshots": 14, "bodyshots": 49, "legshots": 9, "damage": { "dealt": 2600, "received": 3000 } },
+      "ability_casts": { "grenade": 9, "ability1": 8, "ability2": 5, "ultimate": 2 } },
+    { "puuid": "e3", "name": "Enemy3", "tag": "NA2", "team_id": "Blue", "agent": { "name": "Breach" },
+      "stats": { "score": 3200, "kills": 11, "deaths": 16, "assists": 6, "headshots": 11, "bodyshots": 44, "legshots": 10, "damage": { "dealt": 2300, "received": 3100 } },
+      "ability_casts": { "grenade": 11, "ability1": 10, "ability2": 7, "ultimate": 1 } },
+    { "puuid": "e4", "name": "Enemy4", "tag": "NA2", "team_id": "Blue", "agent": { "name": "Fade" },
+      "stats": { "score": 3000, "kills": 10, "deaths": 16, "assists": 5, "headshots": 9, "bodyshots": 42, "legshots": 11, "damage": { "dealt": 2200, "received": 3200 } },
+      "ability_casts": { "grenade": 10, "ability1": 9, "ability2": 6, "ultimate": 1 } },
+    { "puuid": "e5", "name": "Enemy5", "tag": "NA2", "team_id": "Blue", "agent": { "name": "Neon" },
+      "stats": { "score": 2800, "kills": 9, "deaths": 17, "assists": 4, "headshots": 8, "bodyshots": 40, "legshots": 12, "damage": { "dealt": 2100, "received": 3300 } },
+      "ability_casts": { "grenade": 6, "ability1": 5, "ability2": 4, "ultimate": 1 } }
+  ],
+  "teams": [
+    { "team_id": "Red", "won": true, "rounds": { "won": 1, "lost": 1 } },
+    { "team_id": "Blue", "won": false, "rounds": { "won": 1, "lost": 1 } }
+  ],
+  "rounds": [
+    {
+      "id": 0, "result": "Elimination", "winning_team": "Red",
+      "plant": { "round_time_in_ms": 30000, "site": "A", "player": { "puuid": "p1", "team": "Red" } },
+      "defuse": null,
+      "stats": [
+        { "player": { "puuid": "p1", "team": "Red" }, "economy": { "loadout_value": 4200, "remaining": 100, "spent": 3900 } },
+        { "player": { "puuid": "p2", "team": "Red" }, "economy": { "loadout_value": 4000, "remaining": 200, "spent": 3800 } },
+        { "player": { "puuid": "p3", "team": "Red" }, "economy": { "loadout_value": 4100, "remaining": 150, "spent": 3850 } },
+        { "player": { "puuid": "p4", "team": "Red" }, "economy": { "loadout_value": 3900, "remaining": 250, "spent": 3700 } },
+        { "player": { "puuid": "p5", "team": "Red" }, "economy": { "loadout_value": 4300, "remaining": 50, "spent": 4000 } }
+      ]
+    },
+    {
+      "id": 1, "result": "Elimination", "winning_team": "Blue",
+      "plant": null,
+      "defuse": null,
+      "stats": [
+        { "player": { "puuid": "p1", "team": "Red" }, "economy": { "loadout_value": 800, "remaining": 900, "spent": 400 } },
+        { "player": { "puuid": "p2", "team": "Red" }, "economy": { "loadout_value": 900, "remaining": 800, "spent": 500 } },
+        { "player": { "puuid": "p3", "team": "Red" }, "economy": { "loadout_value": 700, "remaining": 1000, "spent": 300 } },
+        { "player": { "puuid": "p4", "team": "Red" }, "economy": { "loadout_value": 850, "remaining": 850, "spent": 450 } },
+        { "player": { "puuid": "p5", "team": "Red" }, "economy": { "loadout_value": 750, "remaining": 950, "spent": 350 } }
+      ]
+    }
+  ],
+  "kills": [
+    { "round": 0, "time_in_round_in_ms": 1000, "killer": { "puuid": "p1", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Vandal" } },
+    { "round": 0, "time_in_round_in_ms": 3000, "killer": { "puuid": "e2", "team": "Blue" }, "victim": { "puuid": "p2", "team": "Red" }, "assistants": [], "weapon": { "name": "Phantom" } },
+    { "round": 0, "time_in_round_in_ms": 4000, "killer": { "puuid": "p3", "team": "Red" }, "victim": { "puuid": "e2", "team": "Blue" }, "assistants": [{ "puuid": "p1", "team": "Red" }], "weapon": { "name": "Sheriff" } },
+    { "round": 1, "time_in_round_in_ms": 1000, "killer": { "puuid": "e1", "team": "Blue" }, "victim": { "puuid": "p1", "team": "Red" }, "assistants": [], "weapon": { "name": "Operator" } },
+    { "round": 1, "time_in_round_in_ms": 2000, "killer": { "puuid": "p2", "team": "Red" }, "victim": { "puuid": "e1", "team": "Blue" }, "assistants": [], "weapon": { "name": "Spectre" } }
+  ]
+}
