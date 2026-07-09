@@ -35,6 +35,7 @@ class RoundBreakdown:
     won: bool
     we_planted: bool = False
     enemy_planted: bool = False
+    plant_site: str | None = None    # site (e.g., "A", "B") when we_planted is True
     kills_by_player: dict[str, int] = field(default_factory=dict)   # our kills
     assists_by_player: dict[str, int] = field(default_factory=dict)  # our assists
     deaths: set[str] = field(default_factory=set)                   # our players who died
@@ -71,10 +72,12 @@ def analyze_rounds(ctx: MatchContext, trade_window_ms: int) -> list[RoundBreakdo
 
         we_planted = bool(rnd.plant and rnd.plant.player.team == ctx.our_team_id)
         enemy_planted = bool(rnd.plant and rnd.plant.player.team not in (None, ctx.our_team_id))
+        plant_site = rnd.plant.site if we_planted else None
 
         rb = RoundBreakdown(
             index=idx, side=side, won=won,
             we_planted=we_planted, enemy_planted=enemy_planted,
+            plant_site=plant_site,
         )
 
         round_kills = sorted(kills_by_round.get(idx + kill_base, []), key=_kill_time)

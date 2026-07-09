@@ -100,8 +100,11 @@ def _callouts(sides: dict, sites: dict, entries: dict, trades: dict, baseline: d
 
 def compute_map_detail(contexts) -> dict:
     """Per-map cumulative positions (deaths/kills/plants across all matches on that map)
-    plus per-map agent usage. Positions share the map's coordinate system, so pooling
+    plus per-map agent usage and site stats. Positions share the map's coordinate system, so pooling
     across matches on the same map is valid."""
+    window = trade_window_ms_default()
+    data = all_breakdowns(contexts, window)
+    
     detail: dict[str, dict] = {}
     for ctx in contexts:
         name = ctx.match.metadata.map_name
@@ -117,13 +120,25 @@ def compute_map_detail(contexts) -> dict:
                 a["games"] += 1
                 a["wins"] += int(ctx.team_won)
 
+    # Group round breakdowns by map for per-map site stats
+    map_rounds: dict[str, list[tuple]] = {}
+    for ctx, rounds in data:
+        map_name = ctx.match.metadata.map_name
+        map_rounds.setdefault(map_name, []).append((ctx, rounds))
+
     out: dict[str, dict] = {}
     for name, d in detail.items():
         agents = {
             an: {"games": v["games"], "wins": v["wins"], "win_rate": pct(v["wins"], v["games"])}
             for an, v in sorted(d["_agents"].items(), key=lambda kv: -kv[1]["games"])
         }
-        out[name] = {"positions": d["positions"], "agents": agents}
+        # Compute per-map site stats
+        site_data = compute_sites(map_rounds.get(name, []))
+        out[name] = {
+            "positions": d["positions"],
+            "agents": agents,
+            "sites": site_data,
+        }
     return out
 
 

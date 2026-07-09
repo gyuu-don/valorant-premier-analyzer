@@ -77,8 +77,8 @@ export function WinRateCell({ pct, delta }: { pct: number; delta?: ReactNode }) 
   );
 }
 
-export function WinRateBar({ pct }: { pct: number }) {
-  const tone = pct >= 55 ? "good" : pct <= 45 ? "bad" : "mid";
+export function WinRateBar({ pct, good = 55, bad = 45 }: { pct: number; good?: number; bad?: number }) {
+  const tone = pct >= good ? "good" : pct <= bad ? "bad" : "mid";
   return (
     <div className="wr">
       <div className="wr-bar">
