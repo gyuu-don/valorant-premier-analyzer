@@ -55,14 +55,21 @@ def _callouts(sides: dict, sites: dict, entries: dict, trades: dict, baseline: d
     """Prioritized notes, benchmarked against the opponents actually faced when available."""
     notes: list[dict] = []
 
-    # Internal side balance is meaningful regardless of the opponent baseline.
+    # Internal side balance is meaningful regardless of the opponent baseline; always shown.
     atk, dfn = sides["attack_win_rate"], sides["defense_win_rate"]
-    if abs(atk - dfn) >= 8:
+    gap = round(abs(atk - dfn), 1)
+    if gap >= 8:
         weaker, wr = ("attack", atk) if atk < dfn else ("defense", dfn)
         notes.append({
             "severity": "high", "area": "Side balance",
             "text": f"{weaker.capitalize()} is the weaker side at {wr}% round win rate "
                     f"(vs {max(atk, dfn)}% on the other side). Prioritize {weaker} setups in practice.",
+        })
+    else:
+        notes.append({
+            "severity": "info", "area": "Side balance",
+            "text": f"Sides are balanced — attack {atk}% vs defense {dfn}% round win rate "
+                    f"({gap} pt gap). No clear side to prioritize.",
         })
 
     if baseline:

@@ -34,14 +34,14 @@ export default function Tactical() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Tactical Breakdown</h1>
+        <h1>Gameplay Breakdown</h1>
         <div className="subtle">
           Benchmarked against the {baseline?.matches ?? 0} opponents you actually faced — your
-          division's true skill level, not an absolute pro benchmark.
+          division's skill level.
         </div>
       </div>
 
-      <Section title="Coaching callouts" note="Graded relative to opponents faced (division norm).">
+      <Section title="Summary" note="Graded relative to opponents faced (division norm).">
         <ul className="callouts">
           {(callouts ?? []).map((c, i) => (
             <li key={i} className={`callout ${c.severity}`}>

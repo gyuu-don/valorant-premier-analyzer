@@ -20,7 +20,7 @@ const NAV = [
   { to: "/", label: "Overview", end: true },
   { to: "/players", label: "Players" },
   { to: "/maps", label: "Maps & Agents" },
-  { to: "/tactical", label: "Tactical" },
+  { to: "/tactical", label: "Gameplay" },
   { to: "/matches", label: "Match Analysis" },
 ];
 
