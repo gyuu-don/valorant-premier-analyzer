@@ -82,12 +82,13 @@ body {
 .team-red { color: var(--accent); }
 .team-blue { color: var(--blue); }
 
-.wr-bar { position: relative; background: var(--panel-2); border-radius: 6px; height: 20px; overflow: hidden; }
+.wr { display: flex; align-items: center; gap: 8px; }
+.wr-bar { position: relative; flex: 1; background: var(--panel-2); border-radius: 6px; height: 20px; overflow: hidden; }
 .wr-fill { height: 100%; }
 .wr-fill.good { background: var(--good); }
 .wr-fill.bad { background: var(--bad); }
 .wr-fill.mid { background: var(--mid); }
-.wr-text { position: absolute; right: 8px; top: 1px; font-size: 12px; color: #0b0d11; font-weight: 700; }
+.wr-text { flex: none; min-width: 44px; text-align: right; font-size: 12px; color: var(--text); font-weight: 700; }
 
 .bars { display: grid; gap: 10px; }
 .labeled-bar { display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; }

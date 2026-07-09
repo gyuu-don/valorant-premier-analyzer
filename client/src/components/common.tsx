@@ -23,8 +23,10 @@ export function StatCard({
 export function WinRateBar({ pct }: { pct: number }) {
   const tone = pct >= 55 ? "good" : pct <= 45 ? "bad" : "mid";
   return (
-    <div className="wr-bar">
-      <div className={`wr-fill ${tone}`} style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+    <div className="wr">
+      <div className="wr-bar">
+        <div className={`wr-fill ${tone}`} style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+      </div>
       <span className="wr-text">{pct}%</span>
     </div>
   );
