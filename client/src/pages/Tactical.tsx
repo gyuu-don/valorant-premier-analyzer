@@ -1,5 +1,5 @@
-import { useReport } from "../hooks";
-import { ErrorBox, InfoLabel, Loading, Section, StatCard, WinRateBar } from "../components/common";
+import { useReport, usePreviousReport } from "../hooks";
+import { ErrorBox, InfoLabel, Loading, Section, WinRateCell, StatCard, Delta } from "../components/common";
 
 const TRADE_PHASES: { key: string; slug: string }[] = [
   { key: "attack_preplant", slug: "trade_attack_preplant" },
@@ -10,12 +10,16 @@ const TRADE_PHASES: { key: string; slug: string }[] = [
 
 export default function Tactical() {
   const { data, isLoading, error } = useReport();
+  const prev = usePreviousReport();
   if (isLoading) return <Loading />;
   if (error) return <ErrorBox error={error} />;
   if (!data || data.matches_analyzed === 0)
     return <div className="notice">No tactical data.</div>;
 
   const { entries, trades, sites, callouts, baseline } = data;
+  const prevData = prev.data;
+  const prevShort = prev.stage?.short?.toUpperCase();
+  const dl = (cur?: number, prevVal?: number) => <Delta cur={cur} prev={prevVal} prevLabel={prevShort} />;
 
   // Grade a metric against the opponent baseline (division norm).
   const vs = (ours: number, theirs?: number) => {
@@ -53,13 +57,17 @@ export default function Tactical() {
       </Section>
 
       <div className="stat-grid">
-        <StatCard label={<InfoLabel k="opening_duel">Opening-duel win rate</InfoLabel>} value={`${entries?.opening_duel_win_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="opening_duel">Opening-duel win rate</InfoLabel>}
+          value={<>{entries?.opening_duel_win_rate ?? 0}% {dl(entries?.opening_duel_win_rate, prevData?.entries?.opening_duel_win_rate)}</>}
           sub={eGrade.sub || `${entries?.opening_duels ?? 0} duels`} tone={eGrade.tone} />
-        <StatCard label={<InfoLabel k="deaths_traded_rate">Deaths traded</InfoLabel>} value={`${trades?.deaths_traded_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="deaths_traded_rate">Deaths traded</InfoLabel>}
+          value={<>{trades?.deaths_traded_rate ?? 0}% {dl(trades?.deaths_traded_rate, prevData?.trades?.deaths_traded_rate)}</>}
           sub={`${tGrade.sub} · ${trades?.untradeable_deaths ?? 0} untradeable excl.`} tone={tGrade.tone} />
-        <StatCard label={<InfoLabel k="retake_success">Retake success</InfoLabel>} value={`${sites?.defense.retake_success_rate ?? 0}%`}
+        <StatCard label={<InfoLabel k="retake_success">Retake success</InfoLabel>}
+          value={<>{sites?.defense.retake_success_rate ?? 0}% {dl(sites?.defense.retake_success_rate, prevData?.sites?.defense.retake_success_rate)}</>}
           sub={rGrade.sub || `${sites?.defense.retake_opportunities ?? 0} retakes`} tone={rGrade.tone} />
-        <StatCard label={<InfoLabel k="post_plant_conversion">Post-plant conversion</InfoLabel>} value={`${sites?.attack.post_plant_conversion ?? 0}%`}
+        <StatCard label={<InfoLabel k="post_plant_conversion">Post-plant conversion</InfoLabel>}
+          value={<>{sites?.attack.post_plant_conversion ?? 0}% {dl(sites?.attack.post_plant_conversion, prevData?.sites?.attack.post_plant_conversion)}</>}
           sub={pGrade.sub || `${sites?.attack.plants ?? 0} plants`} tone={pGrade.tone} />
       </div>
 
@@ -77,7 +85,7 @@ export default function Tactical() {
                 <td className="name-cell">{nameOf(data, puuid)}</td>
                 <td>{e.first_kills}</td>
                 <td>{e.first_deaths}</td>
-                <td>{e.entry_win_rate}%</td>
+                <td>{e.entry_win_rate}% {dl(e.entry_win_rate, prevData?.entries?.per_player?.[puuid]?.entry_win_rate)}</td>
               </tr>
             ))}
           </tbody>
@@ -101,7 +109,7 @@ export default function Tactical() {
                 <td>{t.deaths}</td>
                 <td>{t.tradeable_deaths}</td>
                 <td>{t.deaths_traded}</td>
-                <td>{t.deaths_traded_rate}%</td>
+                <td>{t.deaths_traded_rate}% {dl(t.deaths_traded_rate, prevData?.trades?.per_player?.[puuid]?.deaths_traded_rate)}</td>
                 <td>{t.trade_kills}</td>
               </tr>
             ))}
@@ -129,7 +137,7 @@ export default function Tactical() {
                     <td className="name-cell"><InfoLabel k={slug} /></td>
                     <td>{v.traded}</td>
                     <td>{v.tradeable}</td>
-                    <td className="wr-col"><WinRateBar pct={v.rate} /></td>
+                    <td className="wr-col"><WinRateCell pct={v.rate} delta={dl(v.rate, prevData?.trades?.by_phase?.[key]?.rate)} /></td>
                   </tr>
                 );
               })}

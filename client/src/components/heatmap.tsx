@@ -4,7 +4,7 @@ import type { MatchAnalysis } from "../types";
 
 export const HEAT_SIZE = 680;
 const LAYER_COLORS: Record<string, string> = {
-  deaths: "248,113,113",
+  deaths: "225,29,72",   // matches --bad (#e11d48)
   kills: "74,222,128",
 };
 

@@ -136,6 +136,18 @@ export interface Report {
   matches_analyzed: number;
   trade_window_ms?: number;
   warning?: string;
+  situational?: {
+    first_blood_rate: { rate: number; won: number; total: number };
+    first_blood_conversion: { rate: number; won: number; total: number };
+    fb_conceded_recovery: { rate: number; won: number; total: number };
+    rwr_1v1: { rate: number; won: number; total: number };
+    rwr_2v2: { rate: number; won: number; total: number };
+    clutch_1vx: { rate: number; won: number; total: number };
+    enemy_clutch_denied: { rate: number; won: number; total: number };
+    pistol_win_rate: { rate: number; won: number; total: number };
+    median_plant_time_s: number | null;
+    plant_time_rounds: number;
+  };
   record?: { wins: number; losses: number };
   recent_form?: { result: string; started_at?: string | null }[];
   sides?: {

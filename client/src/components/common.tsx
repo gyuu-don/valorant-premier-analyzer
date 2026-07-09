@@ -42,6 +42,41 @@ export function StatCard({
   );
 }
 
+// Stage-over-stage change indicator for a percentage stat. Renders nothing unless both
+// current and previous values are present. ±2pt threshold: green ▲ / yellow = / red ▼.
+export function Delta({
+  cur,
+  prev,
+  prevLabel,
+}: {
+  cur?: number | null;
+  prev?: number | null;
+  prevLabel?: string;
+}) {
+  if (cur == null || prev == null) return null;
+  const d = Math.round((cur - prev) * 10) / 10;
+  const dir = d >= 2 ? "up" : d <= -2 ? "down" : "equal";
+  const arrow = dir === "up" ? "▲" : dir === "down" ? "▼" : "＝";
+  const sign = d > 0 ? "+" : "";
+  const title = `${sign}${d}% from previous stage${prevLabel ? ` (${prevLabel})` : ""}`;
+  return (
+    <span className={`delta ${dir}`} tabIndex={0} aria-label={title}>
+      {arrow}
+      <span className="delta-tip" role="tooltip">{title}</span>
+    </span>
+  );
+}
+
+// A win-rate bar with an optional delta indicator beside it (for table cells).
+export function WinRateCell({ pct, delta }: { pct: number; delta?: ReactNode }) {
+  return (
+    <div className="wr-cell">
+      <WinRateBar pct={pct} />
+      {delta}
+    </div>
+  );
+}
+
 export function WinRateBar({ pct }: { pct: number }) {
   const tone = pct >= 55 ? "good" : pct <= 45 ? "bad" : "mid";
   return (
@@ -55,7 +90,7 @@ export function WinRateBar({ pct }: { pct: number }) {
 }
 
 export function Loading() {
-  return <div className="notice">Loading report…</div>;
+  return <div className="notice">Loading report… May take a moment.</div>;
 }
 
 export function ErrorBox({ error }: { error: unknown }) {

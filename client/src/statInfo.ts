@@ -122,6 +122,44 @@ export const STAT_INFO: Record<string, StatDef> = {
     desc: "How often the Advanced Team MVP (impact rating) was a DIFFERENT player than the game-determined MVP (top combat score), across this stage's matches. Higher means raw score and all-round impact often disagree.",
   },
 
+  // Situational & timing (overall team)
+  first_blood_rate: {
+    label: "First-blood rate",
+    desc: "Share of rounds (that had an opening kill) where your team drew first blood — i.e. how often you win the round's first duel.",
+  },
+  first_blood_conversion: {
+    label: "First-blood conversion",
+    desc: "Of rounds where your team got the opening kill, the share you went on to win.",
+  },
+  fb_conceded_recovery: {
+    label: "FB-conceded recovery",
+    desc: "Of rounds where your team CONCEDED the opening kill (died first), the share you still won — a resilience measure.",
+  },
+  rwr_1v1: {
+    label: "1v1 RWR",
+    desc: "Win rate of rounds that reached an even 1-alive-vs-1-alive state (reconstructed from kill order).",
+  },
+  rwr_2v2: {
+    label: "2v2 RWR",
+    desc: "Win rate of rounds that reached an even 2-alive-vs-2-alive state (reconstructed from kill order).",
+  },
+  clutch_1vx: {
+    label: "1vX clutch RWR",
+    desc: "Win rate of rounds where your last player was alive against one or more enemies (includes 1v1). The overall clutch-success rate.",
+  },
+  enemy_clutch_denied: {
+    label: "Enemy clutch denied",
+    desc: "Of rounds where the enemy was down to their last player while you had ≥1 alive, the share you closed out (denied their clutch).",
+  },
+  pistol_win_rate: {
+    label: "Pistol win rate",
+    desc: "Win rate on the two pistol rounds (round 1 and round 13 — the first round of each half).",
+  },
+  median_plant_time: {
+    label: "Median plant time",
+    desc: "Median in-round time your team planted the spike on attack (seconds elapsed from the round barrier drop), over rounds where you planted. Also shown as time remaining on the round clock (the play phase is 1:40 / 100s), e.g. 40s elapsed = 1:00 left.",
+  },
+
   // Team-level
   record: { label: "Record", desc: "Wins–losses across the matches analyzed (differs from the official Premier standing)." },
   recent_form: { label: "Recent form", desc: "Recent match results, ordered oldest → most recent (newest is marked)." },

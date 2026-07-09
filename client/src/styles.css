@@ -7,7 +7,7 @@
   --muted: #99a0ad;
   --accent: #ff4655;
   --good: #4ade80;
-  --bad: #f87171;
+  --bad: #e11d48;
   --mid: #fbbf24;
   --blue: #4aa8ff;
 }
@@ -137,6 +137,22 @@ body {
 .team-red { color: var(--accent); }
 .team-blue { color: var(--blue); }
 
+/* Stage-over-stage change indicator (instant custom tooltip, no native-title delay). */
+.delta { position: relative; margin-left: 6px; font-size: 1rem; cursor: help; font-weight: 700; outline: none; }
+.delta.up { color: var(--good); }
+.delta.down { color: var(--bad); }
+.delta.equal { color: var(--mid); }
+.delta > .delta-tip {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  z-index: 60; white-space: nowrap; background: #0b0d11; color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 1rem;
+  font-weight: 400; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+.delta:hover > .delta-tip,
+.delta:focus > .delta-tip { display: block; }
+
+.wr-cell { display: flex; align-items: center; gap: 8px; }
+.wr-cell > .wr { flex: 1; }
 .wr { display: flex; align-items: center; gap: 8px; }
 .wr-bar { position: relative; flex: 1; background: var(--panel-2); border-radius: 6px; height: 22px; overflow: hidden; }
 .wr-fill { height: 100%; border-radius: 6px; }
@@ -145,9 +161,12 @@ body {
 .wr-fill.mid { background: var(--mid); }
 .wr-text { flex: none; min-width: 54px; text-align: right; font-size: 1rem; color: var(--text); font-weight: 700; }
 
-.bars { display: grid; gap: 12px; }
-.labeled-bar { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; }
-.lb-label { display: flex; flex-direction: column; }
+.bars { display: grid; gap: 14px; }
+/* Fixed 3-column layout (label | bar | rounds) keeps every row single-line and uniform
+   height, so the vertical spacing reads consistently and bar right-edges align. */
+.labeled-bar { display: grid; grid-template-columns: 150px 1fr 72px; gap: 12px; align-items: center; }
+.labeled-bar .wr-bar { height: 26px; }
+.lb-extra { text-align: right; white-space: nowrap; }
 .cap { text-transform: capitalize; font-weight: 600; }
 
 .mvp-row { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
@@ -236,7 +255,7 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 
 /* MVP ranking table: short name column, wide impact column. */
 .mini-table { width: 100%; table-layout: fixed; }
-.mini-table col.mvp-col-name { width: 170px; }
+.mini-table col.mvp-col-name { width: 250px; }
 /* Match Analysis Team MVP: a touch wider so longer names aren't clipped by the bar. */
 .match-mvp-ranking .mini-table col.mvp-col-name { width: 250px; }
 .mini-table col.mvp-col-impact { width: auto; }
@@ -384,6 +403,6 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 
 @media (max-width: 760px) {
   .mvp-row, .overview .mvp-row, .profile { grid-template-columns: 1fr; }
-  .labeled-bar { grid-template-columns: 110px 1fr; }
+  .labeled-bar { grid-template-columns: 100px 1fr 56px; }
   .pc-sections { grid-template-columns: 1fr; }
 }

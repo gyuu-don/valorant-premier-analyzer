@@ -182,6 +182,26 @@ def test_mvp_awards(context):
     assert 0.0 <= a["differed_pct"] <= 100.0
 
 
+def test_situational(context):
+    from app.analytics.situational import compute_situational
+
+    s = compute_situational([context])
+    # R0 we got first blood, R1 we conceded it -> first-blood rate 1/2.
+    assert s["first_blood_rate"] == {"rate": 50.0, "won": 1, "total": 2}
+    # R0: we got first blood (p1 kills e1) and won -> conversion 1/1.
+    assert s["first_blood_conversion"] == {"rate": 100.0, "won": 1, "total": 1}
+    # R1: we conceded first blood (e1 kills p1) and lost -> recovery 0/1.
+    assert s["fb_conceded_recovery"] == {"rate": 0.0, "won": 0, "total": 1}
+    # Only round index 0 exists as a pistol here; we won it.
+    assert s["pistol_win_rate"] == {"rate": 100.0, "won": 1, "total": 1}
+    # R0 attack plant at 30000ms -> 30.0s median (one planted round).
+    assert s["median_plant_time_s"] == 30.0
+    assert s["plant_time_rounds"] == 1
+    # No round reached even duels or a last-man state in the fixture.
+    for k in ("rwr_1v1", "rwr_2v2", "clutch_1vx", "enemy_clutch_denied"):
+        assert s[k]["total"] == 0
+
+
 def test_build_report(team, match):
     report = build_report(team, [match])
     assert report["matches_analyzed"] == 1

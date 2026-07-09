@@ -9,6 +9,7 @@ from app.analytics.mvp import compute_mvp
 from app.analytics.players import compute_players
 from app.analytics.rounds import all_breakdowns
 from app.analytics.sides import compute_sides
+from app.analytics.situational import compute_situational
 from app.analytics.sites import compute_sites
 from app.analytics.trades import compute_trades
 from app.analytics.utility import compute_utility
@@ -267,6 +268,7 @@ def build_report(team: PremierTeam, matches: list[MatchV4]) -> dict:
         "record": {"wins": wins, "losses": len(contexts) - wins},
         "recent_form": _recent_form(contexts),
         "sides": sides,
+        "situational": compute_situational(contexts),
         "sites": sites,
         "entries": entries,
         "trades": trades,

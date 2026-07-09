@@ -72,7 +72,7 @@ export function TeamMvpSection({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
           )}
           <div className="mvp-name">{mvp.mvp.name}</div>
           <div className="mvp-rating">{mvp.mvp.rating}</div>
-          <div className="stat-label">Impact rating (0–100)</div>
+          <div className="stat-label">Impact rating <br></br> (0–100)</div>
         </div>
         <div className="mvp-compare">
           {mvp.awards?.most_game_mvp && (

@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useReport } from "../hooks";
+import { useReport, usePreviousReport } from "../hooks";
 import { useSeason } from "../season";
 import { fetchAgentIcons } from "../agents";
 import { fetchMapDetail } from "../api";
 import { fetchMaps } from "../maps";
-import { ErrorBox, InfoLabel, Loading, Section, WinRateBar } from "../components/common";
+import { ErrorBox, InfoLabel, Loading, Section, WinRateBar, WinRateCell, Delta } from "../components/common";
 import { Heatmap } from "../components/heatmap";
 
 const ALL = "all";
 
 export default function MapsAgents() {
   const { data, isLoading, error } = useReport();
+  const prev = usePreviousReport();
   const { season } = useSeason();
   const agentIcons = useQuery({ queryKey: ["agent-icons"], queryFn: fetchAgentIcons, staleTime: Infinity });
   const mapsCal = useQuery({ queryKey: ["maps-cal"], queryFn: fetchMaps, staleTime: Infinity });
@@ -29,6 +30,13 @@ export default function MapsAgents() {
   const allGames = data?.matches_analyzed ?? 0;
   const allWins = data?.record?.wins ?? 0;
   const allWinRate = allGames ? Math.round((100 * allWins) / allGames) : 0;
+
+  // Previous-stage values for delta indicators (matched by map name).
+  const prevData = prev.data;
+  const prevShort = prev.stage?.short?.toUpperCase();
+  const prevRec = prevData?.record;
+  const prevAllWr = prevRec ? Math.round((100 * prevRec.wins) / Math.max(1, prevRec.wins + prevRec.losses)) : undefined;
+  const dl = (cur?: number, prevVal?: number) => <Delta cur={cur} prev={prevVal} prevLabel={prevShort} />;
 
   // Agent usage: global for "all", else the selected map's usage.
   const agents =
@@ -60,19 +68,22 @@ export default function MapsAgents() {
             <tr className={rowClass(ALL)} onClick={() => setSelectedMap(ALL)} style={{ cursor: "pointer" }}>
               <td className="name-cell">All Maps</td>
               <td>{allGames} ({allWins}W)</td>
-              <td className="wr-col"><WinRateBar pct={allWinRate} /></td>
-              <td>{data?.sides?.attack_win_rate ?? 0}%</td>
-              <td>{data?.sides?.defense_win_rate ?? 0}%</td>
+              <td className="wr-col"><WinRateCell pct={allWinRate} delta={dl(allWinRate, prevAllWr)} /></td>
+              <td>{data?.sides?.attack_win_rate ?? 0}% {dl(data?.sides?.attack_win_rate, prevData?.sides?.attack_win_rate)}</td>
+              <td>{data?.sides?.defense_win_rate ?? 0}% {dl(data?.sides?.defense_win_rate, prevData?.sides?.defense_win_rate)}</td>
             </tr>
-            {maps.map(([name, m]) => (
-              <tr key={name} className={rowClass(name)} onClick={() => setSelectedMap(name)} style={{ cursor: "pointer" }}>
-                <td className="name-cell">{name}</td>
-                <td>{m.games} ({m.wins}W)</td>
-                <td className="wr-col"><WinRateBar pct={m.win_rate} /></td>
-                <td>{m.attack_round_win_rate}%</td>
-                <td>{m.defense_round_win_rate}%</td>
-              </tr>
-            ))}
+            {maps.map(([name, m]) => {
+              const pm = prevData?.maps?.[name];
+              return (
+                <tr key={name} className={rowClass(name)} onClick={() => setSelectedMap(name)} style={{ cursor: "pointer" }}>
+                  <td className="name-cell">{name}</td>
+                  <td>{m.games} ({m.wins}W)</td>
+                  <td className="wr-col"><WinRateCell pct={m.win_rate} delta={dl(m.win_rate, pm?.win_rate)} /></td>
+                  <td>{m.attack_round_win_rate}% {dl(m.attack_round_win_rate, pm?.attack_round_win_rate)}</td>
+                  <td>{m.defense_round_win_rate}% {dl(m.defense_round_win_rate, pm?.defense_round_win_rate)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         <p className="hint">Click a map row to filter the heatmap and agent usage below.</p>
