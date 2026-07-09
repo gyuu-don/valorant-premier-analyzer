@@ -14,9 +14,18 @@ from app.analytics.utility import compute_utility
 from app.models import MatchV4, PremierTeam
 
 
-def _recent_form(contexts) -> list[str]:
-    # Most recent first is not guaranteed; return in the order given.
-    return ["W" if c.team_won else "L" for c in contexts]
+def _recent_form(contexts) -> list[dict]:
+    """Win/loss per match with its date, sorted chronologically (oldest first).
+
+    History order from the API is not guaranteed, so we sort by started_at here; the
+    frontend renders left = oldest, right = most recent.
+    """
+    items = [
+        {"result": "W" if c.team_won else "L", "started_at": c.match.metadata.started_at}
+        for c in contexts
+    ]
+    items.sort(key=lambda x: x["started_at"] or "")
+    return items
 
 
 # Point margins (percentage points) for grading a metric against the opponent baseline.

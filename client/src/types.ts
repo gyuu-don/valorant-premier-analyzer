@@ -58,7 +58,7 @@ export interface Report {
   matches_analyzed: number;
   warning?: string;
   record?: { wins: number; losses: number };
-  recent_form?: string[];
+  recent_form?: { result: string; started_at?: string | null }[];
   sides?: {
     attack_win_rate: number;
     defense_win_rate: number;

@@ -62,9 +62,13 @@ body {
 .stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
 .stat-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
-.form { display: inline-flex; gap: 3px; font-size: 20px; }
-.form .w { color: var(--good); font-weight: 700; }
-.form .l { color: var(--bad); font-weight: 700; }
+.form { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 20px; font-weight: 800; }
+.form .w { color: var(--good); }
+.form .l { color: var(--bad); }
+/* Most-recent match: underline marker so the newest end is clear without a box. */
+.form .latest { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.form-axis { display: inline-flex; align-items: center; gap: 6px; }
+.form-axis .arrow { font-size: 13px; color: var(--text); }
 
 .panel {
   background: var(--panel); border: 1px solid var(--border);
@@ -132,7 +136,33 @@ body {
 .hint { color: var(--muted); font-size: 12px; margin-top: 10px; }
 code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 
+/* MVP ranking table: short name column, wide impact column. */
+.mini-table { width: 100%; table-layout: fixed; }
+.mini-table col.mvp-col-name { width: 160px; }
+.mini-table col.mvp-col-impact { width: auto; }
+.mini-table td:first-child,
+.mini-table th:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Overview page: enlarge the dashboard widgets ~50%. */
+.overview .stat-grid { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 21px; margin-bottom: 33px; }
+.overview .stat-card { padding: 24px; border-left-width: 4px; }
+.overview .stat-value { font-size: 39px; }
+.overview .stat-label { font-size: 15px; margin-top: 6px; }
+.overview .stat-sub { font-size: 15px; }
+.overview .form { font-size: 30px; gap: 5px; }
+/* Smaller resulting-MVP card, larger impact graph. */
+.overview .mvp-row { grid-template-columns: 190px 1fr; gap: 24px; }
+.overview .mvp-card { padding: 14px; }
+.overview .mvp-name { font-size: 17px; }
+.overview .mvp-rating { font-size: 38px; }
+.overview .mvp-card .stat-label { font-size: 11px; }
+/* Impact graph = per-player rating bars on the right. */
+.overview .mvp-compare .mini-table td { padding: 12px 10px; font-size: 15px; }
+.overview .mvp-compare .wr-bar { height: 30px; }
+.overview .mvp-compare .wr-text { font-size: 16px; min-width: 52px; }
+
 @media (max-width: 720px) {
   .mvp-row, .profile { grid-template-columns: 1fr; }
+  .overview .mvp-row { grid-template-columns: 1fr; }
   .labeled-bar { grid-template-columns: 100px 1fr; }
 }

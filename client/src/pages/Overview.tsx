@@ -20,7 +20,7 @@ export default function Overview() {
   const wr = record ? Math.round((100 * record.wins) / Math.max(1, record.wins + record.losses)) : 0;
 
   return (
-    <div className="page">
+    <div className="page overview">
       <div className="page-head">
         <h1>
           {team.name} <span className="tag">#{team.tag}</span>
@@ -47,12 +47,11 @@ export default function Overview() {
           tone={(sides?.defense_win_rate ?? 0) >= 50 ? "good" : "bad"} />
         <StatCard
           label="Recent form"
-          value={
-            <span className="form">
-              {(recent_form ?? []).slice(0, 8).map((r, i) => (
-                <span key={i} className={r === "W" ? "w" : "l"}>{r}</span>
-              ))}
-            </span>
+          value={<RecentForm form={(recent_form ?? []).slice(-10)} />}
+          sub={
+            (recent_form?.length ?? 0) > 0 ? (
+              <span className="form-axis"><span>oldest</span><span className="arrow">→</span><span>latest</span></span>
+            ) : undefined
           }
         />
       </div>
@@ -72,6 +71,10 @@ export default function Overview() {
                 <span className="subtle">({mvp.official_mvp?.score} pts)</span>
               </p>
               <table className="mini-table">
+                <colgroup>
+                  <col className="mvp-col-name" />
+                  <col className="mvp-col-impact" />
+                </colgroup>
                 <thead>
                   <tr><th>Player</th><th>Impact</th></tr>
                 </thead>
@@ -79,7 +82,7 @@ export default function Overview() {
                   {mvp.ranking.map((r) => (
                     <tr key={r.puuid}>
                       <td>{r.name}</td>
-                      <td style={{ width: 160 }}><WinRateBar pct={r.rating} /></td>
+                      <td><WinRateBar pct={r.rating} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -112,5 +115,34 @@ function LabeledBar({ label, pct, extra }: { label: string; pct: number; extra?:
       </div>
       <WinRateBar pct={pct} />
     </div>
+  );
+}
+
+function RecentForm({ form }: { form: { result: string; started_at?: string | null }[] }) {
+  if (form.length === 0) return <span className="subtle">—</span>;
+  const fmt = (d?: string | null) => {
+    if (!d) return "date unknown";
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? d : dt.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+  const n = form.length;
+  return (
+    <span className="form">
+      {form.map((f, i) => {
+        const isLatest = i === n - 1;
+        // Older results fade; the most recent is full strength and ringed.
+        const opacity = n === 1 ? 1 : 0.4 + 0.6 * (i / (n - 1));
+        return (
+          <span
+            key={i}
+            className={`${f.result === "W" ? "w" : "l"}${isLatest ? " latest" : ""}`}
+            style={{ opacity }}
+            title={`${f.result === "W" ? "Win" : "Loss"} · ${fmt(f.started_at)}${isLatest ? " · most recent" : ""}`}
+          >
+            {f.result}
+          </span>
+        );
+      })}
+    </span>
   );
 }
