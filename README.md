@@ -10,6 +10,45 @@ team MVP rating, attack/defense splits, and per-player utility usage.
 
 ---
 
+## Screenshots
+
+### Overview
+Team record & recent form, the situational & timing stats (first bloods, clutches, pistols,
+plant timing), and side/economy win rates — with green/amber/red arrows showing the change
+vs. the previous stage.
+
+![Overview](previews/overview.png)
+
+### Players
+Advanced Team MVP (impact rating + in-game-MVP comparison), the roster stats table with
+player banners, and a per-player profile (radar, agents played with pick rates).
+
+![Players](previews/players.png)
+![Players — profile & agents](previews/players-2.png)
+
+### Maps & Agents
+Selectable map-performance table driving a cumulative kill/death heatmap on the minimap,
+plus per-map agent usage.
+
+![Maps & Agents](previews/maps%26agents.png)
+![Maps & Agents — heatmap & agents](previews/maps%26agents-2.png)
+
+### Gameplay
+Coaching summary benchmarked against the opponents faced, entry/trade/site metrics, and the
+trades-by-player / by-game-state breakdowns.
+
+![Gameplay](previews/gameplay.png)
+![Gameplay — per-player & phase splits](previews/gameplay-2.png)
+
+### Match Analysis
+Per-match sub-tabs: scoreboard, per-player breakdown, match-scoped Team MVP, positional
+heatmap, and spike-site detail.
+
+![Match Analysis](previews/match-analysis.png)
+![Match Analysis — heatmap & sites](previews/match-analysis-2.png)
+
+---
+
 ## Why HenrikDev and not the official Riot API?
 
 Riot's **official** Valorant API (`developer.riotgames.com`) has **no Premier endpoints**
@@ -73,7 +112,7 @@ npm run dev          # runs FastAPI + Vite together
 | **Overview** | Record, recent form, **advanced team MVP** card, attack/defense & economy win rates |
 | **Players** | ACS, K/D, ADR, KAST%, HS%, multikills, clutches + a per-player radar |
 | **Maps & Agents** | Per-map win rate + attack/defense round split, agent usage |
-| **Tactical** | Coaching callouts, entry duels, trades, holds/retakes, post-plant |
+| **Gameplay** | Gameplay stats, entry duels, trades, holds/retakes, post-plant |
 | **Match Analysis** | Scoreboard (click a player) + per-player game breakdown, match-scoped Advanced Team MVP, round-by-round timeline |
 
 ### Global stage filter
