@@ -17,6 +17,7 @@ async def list_matches(
     tag: str | None = Query(default=None),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=25),
+    season: str | None = Query(default=None, description="Premier stage id to filter by"),
 ):
     """Paginated, latest-first match summaries (date, map, opponent, result, score).
 
@@ -29,7 +30,7 @@ async def list_matches(
         raise HTTPException(status_code=400, detail="No team configured (set PREMIER_TEAM_* or pass ?name=&tag=).")
     try:
         team = await endpoints.get_team(name, tag)
-        matches, has_more, total = await endpoints.load_match_page(team, offset, limit)
+        matches, has_more, total = await endpoints.load_match_page(team, offset, limit, season_id=season)
     except HenrikError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     # next_offset advances by history *entries* consumed (not summaries returned), so

@@ -15,8 +15,23 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const fetchReport = (limit?: number) =>
-  getJson<Report>(`/api/analytics/report${limit ? `?limit=${limit}` : ""}`);
+const seasonParam = (season?: string | null) =>
+  season && season !== "all" ? `season=${encodeURIComponent(season)}` : "";
+
+export const fetchReport = (season?: string | null) => {
+  const qs = seasonParam(season);
+  return getJson<Report>(`/api/analytics/report${qs ? `?${qs}` : ""}`);
+};
+
+export interface Stage {
+  id: string;
+  short: string | null;
+  starts_at: string;
+  ends_at: string;
+  matches: number;
+}
+
+export const fetchStages = () => getJson<{ stages: Stage[] }>("/api/stages");
 
 export const fetchTeam = () => getJson<any>("/api/team");
 
@@ -40,8 +55,10 @@ export interface MatchPage {
   total: number;
 }
 
-export const fetchMatches = (offset = 0, limit = 10) =>
-  getJson<MatchPage>(`/api/matches?offset=${offset}&limit=${limit}`);
+export const fetchMatches = (offset = 0, limit = 10, season?: string | null) => {
+  const qs = seasonParam(season);
+  return getJson<MatchPage>(`/api/matches?offset=${offset}&limit=${limit}${qs ? `&${qs}` : ""}`);
+};
 
 export const fetchMatch = (matchId: string) =>
   getJson<any>(`/api/match/${matchId}`);

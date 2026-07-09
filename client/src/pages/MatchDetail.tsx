@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchMatch, fetchMatches, type MatchSummary } from "../api";
 import { mapImage } from "../maps";
+import { useSeason } from "../season";
 import { ErrorBox, Loading, Section } from "../components/common";
 
 const FIRST_PAGE = 10;
@@ -49,13 +50,15 @@ function MatchCard({
 }
 
 export default function MatchDetail() {
+  const { season } = useSeason();
   const [matchId, setMatchId] = useState<string>("");
 
   const {
     data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["matches-infinite"],
-    queryFn: ({ pageParam }) => fetchMatches(pageParam, pageParam === 0 ? FIRST_PAGE : NEXT_PAGE),
+    queryKey: ["matches-infinite", season],
+    queryFn: ({ pageParam }) =>
+      fetchMatches(pageParam, pageParam === 0 ? FIRST_PAGE : NEXT_PAGE, season),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.has_more ? last.next_offset : undefined),
   });
@@ -86,7 +89,7 @@ export default function MatchDetail() {
 
   return (
     <div className="page">
-      <div className="page-head"><h1>Match Deep-Dive</h1></div>
+      <div className="page-head"><h1>Match Analysis</h1></div>
 
       <Section title="Select a match" note="Most recent first — scroll to load older matches.">
         {isLoading && <span className="subtle">Loading match list…</span>}

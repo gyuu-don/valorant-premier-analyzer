@@ -76,6 +76,14 @@ npm run dev          # runs FastAPI + Vite together
 | **Tactical** | Coaching callouts, entry duels, trades, holds/retakes, post-plant, utility |
 | **Match Deep-Dive** | Scoreboard + round-by-round timeline for a single match |
 
+### Global stage filter
+- A **stage dropdown in the header** scopes *every* page (Overview, Players, Maps, Tactical,
+  Match Analysis) to a single Premier stage — e.g. `E11A4 · Jun 23 – Aug 18, 2026`. Stages
+  come from the HenrikDev seasons endpoint (only those your team has matches in are shown),
+  and filtering is done by each stage's date window. Defaults to the current stage; pick
+  "All stages" to analyze everything. Backend: `GET /api/stages` + a `season` query param on
+  `/api/analytics/report` and `/api/matches`.
+
 ### Advanced metrics
 - **Opponent-relative baseline** — the app also analyzes the opponents you actually
   faced and benchmarks your tactical metrics against them ("you 48% vs opponents 52%").

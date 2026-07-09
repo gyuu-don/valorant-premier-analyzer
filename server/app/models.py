@@ -30,12 +30,18 @@ class QueueInfo(_Base):
     mode_type: Optional[str] = None
 
 
+class SeasonInfo(_Base):
+    id: Optional[str] = None
+    short: Optional[str] = None
+
+
 class MatchMetadata(_Base):
     match_id: Optional[str] = None
     map: MapInfo = Field(default_factory=MapInfo)
     started_at: Optional[str] = None
     game_length_in_ms: Optional[int] = None
     queue: QueueInfo = Field(default_factory=QueueInfo)
+    season: SeasonInfo = Field(default_factory=SeasonInfo)
     region: Optional[str] = None
 
     @property

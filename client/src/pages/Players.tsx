@@ -2,7 +2,9 @@ import { useState } from "react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
+import { fetchAgentIcons } from "../agents";
 import { ErrorBox, Loading, Section } from "../components/common";
 import type { PlayerRow } from "../types";
 
@@ -23,6 +25,11 @@ const RADAR_MAX: Record<string, number> = {
 
 export default function Players() {
   const { data, isLoading, error } = useReport();
+  const agentIcons = useQuery({
+    queryKey: ["agent-icons"],
+    queryFn: fetchAgentIcons,
+    staleTime: Infinity,
+  });
   const [selected, setSelected] = useState<string | null>(null);
   if (isLoading) return <Loading />;
   if (error) return <ErrorBox error={error} />;
@@ -45,7 +52,7 @@ export default function Players() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Player</th><th>Agents</th>
+              <th>Player</th>
               {COLS.map((c) => <th key={c.label}>{c.label}</th>)}
             </tr>
           </thead>
@@ -57,7 +64,6 @@ export default function Players() {
                 onClick={() => setSelected(p.puuid)}
               >
                 <td className="name-cell">{p.name}</td>
-                <td className="subtle">{p.agents.map((a) => a.name).slice(0, 3).join(", ")}</td>
                 {COLS.map((c) => <td key={c.label}>{p[c.key] as number}</td>)}
               </tr>
             ))}
@@ -85,6 +91,45 @@ export default function Players() {
           </div>
         </div>
       </Section>
+
+      <Section title="Agents played" note="Pick rate = share of this player's games on each agent.">
+        <AgentUsage agents={active.agents} icons={agentIcons.data} />
+      </Section>
+    </div>
+  );
+}
+
+function AgentUsage({
+  agents,
+  icons,
+}: {
+  agents: { name: string; games: number }[];
+  icons?: Record<string, string>;
+}) {
+  if (!agents || agents.length === 0) return <div className="subtle">No agent data.</div>;
+  const total = agents.reduce((s, a) => s + a.games, 0) || 1;
+  return (
+    <div className="agent-usage">
+      {agents.map((a) => {
+        const pct = Math.round((100 * a.games) / total);
+        const icon = icons?.[a.name.toLowerCase()];
+        return (
+          <div className="agent-row" key={a.name}>
+            <div className="agent-face">
+              {icon ? <img src={icon} alt={a.name} loading="lazy" /> : <span className="agent-face-ph">{a.name[0]}</span>}
+            </div>
+            <div className="agent-meta">
+              <div className="agent-name">
+                {a.name} <span className="subtle">· {a.games} {a.games === 1 ? "game" : "games"}</span>
+              </div>
+              <div className="pick">
+                <div className="pick-bar"><div className="pick-fill" style={{ width: `${pct}%` }} /></div>
+                <span className="pick-pct">{pct}%</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

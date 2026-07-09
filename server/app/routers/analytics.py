@@ -15,12 +15,14 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 async def get_report(
     name: str | None = Query(default=None),
     tag: str | None = Query(default=None),
-    limit: int | None = Query(default=None, ge=1, le=50),
+    limit: int | None = Query(default=None, ge=1, le=100),
+    season: str | None = Query(default=None, description="Premier stage id to filter by"),
 ):
     settings = get_settings()
     name = name or settings.premier_team_name
     tag = tag or settings.premier_team_tag
-    limit = limit or settings.max_matches
+    # A stage is bounded and small, so pull enough to cover the whole stage when filtering.
+    limit = limit or (100 if season else settings.max_matches)
     if not name or not tag:
         raise HTTPException(
             status_code=400,
@@ -29,7 +31,7 @@ async def get_report(
         )
     try:
         team = await endpoints.get_team(name, tag)
-        matches = await endpoints.load_recent_matches(team, limit)
+        matches = await endpoints.load_recent_matches(team, limit, season_id=season)
     except HenrikError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

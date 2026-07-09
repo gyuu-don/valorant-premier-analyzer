@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.henrik.client import client
-from app.routers import analytics, match, team
+from app.routers import analytics, match, stages, team
 
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(team.router)
     app.include_router(match.router)
     app.include_router(analytics.router)
+    app.include_router(stages.router)
 
     @app.get("/api/health")
     async def health() -> dict:
