@@ -31,6 +31,47 @@ export interface Callout {
   gap?: number;
 }
 
+export interface MatchPlayerAnalysis {
+  puuid: string;
+  name: string;
+  team: string;
+  agent: { id?: string | null; name?: string | null };
+  kills: number;
+  deaths: number;
+  assists: number;
+  acs: number;
+  adr: number;
+  kd: number;
+  kast: number;
+  hs_pct: number;
+  rounds_played: number;
+  multikill_rounds: number;
+  clutches: number;
+  first_kills: number;
+  first_deaths: number;
+  entry_win_rate: number;
+  deaths_traded: number;
+  trade_kills: number;
+  impact_rating: number | null;
+  impact_components: Record<string, number>;
+  utility: {
+    casts: Record<string, number>;
+    per_round: Record<string, number>;
+    total_per_round: number;
+  };
+}
+
+export interface MatchAnalysis {
+  our_team_id: string | null;
+  players: MatchPlayerAnalysis[];
+  mvp: {
+    ranking: MvpEntry[];
+    mvp: MvpEntry | null;
+    weights?: Record<string, number>;
+    weight_total?: number;
+  } | null;
+}
+
 export interface Baseline {
   opening_duel_win_rate: number;
   deaths_traded_rate: number;

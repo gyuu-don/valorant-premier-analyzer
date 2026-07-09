@@ -1,0 +1,105 @@
+"""Per-match ("single game") analytics powering the Match Analysis player card + MVP widget.
+
+Builds a context for both teams, computes per-player stats for all 10 players, and a
+match-scoped impact rating normalized across the whole lobby (so any clicked player has a
+comparable number). The team-MVP widget filters the ranking to our side on the client.
+
+Utility here is per-round *usage* only (per-match `ability_casts` ÷ rounds), by slot —
+there are no ability-cast timestamps, so no kill/assist correlation is possible.
+"""
+from __future__ import annotations
+
+from typing import Optional
+
+from app.analytics.common import build_context, team_ids
+from app.analytics.entries import compute_entries
+from app.analytics.mvp import compute_mvp
+from app.analytics.players import compute_players
+from app.analytics.rounds import all_breakdowns
+from app.analytics.trades import compute_trades
+from app.models import MatchV4
+
+
+def _ctx_for_team(match: MatchV4, team_id: str):
+    puuids = {p.puuid for p in match.players if p.team_id == team_id and p.puuid}
+    return build_context(match, puuids) if puuids else None
+
+
+def build_match_analysis(
+    match: MatchV4, our_premier_id: Optional[str], trade_window_ms: int
+) -> Optional[dict]:
+    ids = team_ids(match)
+    if len(ids) < 2:
+        return None
+
+    # Which side is ours (for the team-MVP widget). May be None if not identifiable.
+    our_team_id: Optional[str] = None
+    if our_premier_id:
+        for t in match.teams:
+            if t.premier_roster and t.premier_roster.id == our_premier_id:
+                our_team_id = t.team_id
+                break
+
+    rounds_count = max(len(match.rounds), 1)
+    players_all: dict[str, dict] = {}
+    entries_pp: dict[str, dict] = {}
+    trades_pp: dict[str, dict] = {}
+
+    for tid in ids:
+        ctx = _ctx_for_team(match, tid)
+        if ctx is None:
+            continue
+        data = all_breakdowns([ctx], trade_window_ms)
+        rows = compute_players(data)
+        entries_pp.update(compute_entries(data)["per_player"])
+        trades_pp.update(compute_trades(data)["per_player"])
+
+        for puuid, row in rows.items():
+            mp = next((p for p in match.players if p.puuid == puuid), None)
+            row["team"] = tid
+            row["agent"] = (
+                {"id": mp.agent.id, "name": mp.agent.name} if mp else {"id": None, "name": None}
+            )
+            ac = mp.ability_casts if mp else None
+            casts = {
+                "grenade": ac.grenade if ac else 0,
+                "ability1": ac.ability1 if ac else 0,
+                "ability2": ac.ability2 if ac else 0,
+                "ultimate": ac.ultimate if ac else 0,
+            }
+            per_round = {k: round(v / rounds_count, 2) for k, v in casts.items()}
+            row["utility"] = {
+                "casts": casts,
+                "per_round": per_round,
+                "total_per_round": round(sum(casts.values()) / rounds_count, 2),
+            }
+            players_all[puuid] = row
+
+    if not players_all:
+        return {"our_team_id": our_team_id, "players": [], "mvp": None}
+
+    # Impact rating normalized across the whole lobby.
+    mvp = compute_mvp(
+        players_all,
+        {"per_player": entries_pp},
+        {"per_player": trades_pp},
+    )
+    rating_by = {r["puuid"]: r for r in mvp["ranking"]}
+
+    for puuid, row in players_all.items():
+        e = entries_pp.get(puuid, {})
+        t = trades_pp.get(puuid, {})
+        row["first_kills"] = e.get("first_kills", 0)
+        row["first_deaths"] = e.get("first_deaths", 0)
+        row["entry_win_rate"] = e.get("entry_win_rate", 0.0)
+        row["deaths_traded"] = t.get("deaths_traded", 0)
+        row["trade_kills"] = t.get("trade_kills", 0)
+        r = rating_by.get(puuid)
+        row["impact_rating"] = r["rating"] if r else None
+        row["impact_components"] = r["components"] if r else {}
+
+    return {
+        "our_team_id": our_team_id,
+        "players": list(players_all.values()),
+        "mvp": mvp,
+    }

@@ -120,6 +120,26 @@ def test_maps(context):
     assert "Jett" in m["agents"]
 
 
+def test_build_match_analysis(match):
+    from app.analytics.match_analysis import build_match_analysis
+
+    a = build_match_analysis(match, "team-123", 4000)
+    assert a is not None
+    assert a["our_team_id"] == "Red"
+    assert len(a["players"]) == 10                       # both teams
+    assert a["mvp"] is not None and len(a["mvp"]["ranking"]) == 10
+
+    p1 = next(p for p in a["players"] if p["puuid"] == "p1")
+    # ability_casts grenade 6 over 2 rounds -> 3.0/round; total (6+8+4+2)=20 -> 10.0/round.
+    assert p1["utility"]["per_round"]["grenade"] == 3.0
+    assert p1["utility"]["total_per_round"] == 10.0
+    # headshots 30 of (30+60+10)=100 -> 30.0%.
+    assert p1["hs_pct"] == 30.0
+    assert p1["team"] == "Red"
+    assert p1["agent"]["name"] == "Jett"
+    assert p1["impact_rating"] is not None
+
+
 def test_build_report(team, match):
     report = build_report(team, [match])
     assert report["matches_analyzed"] == 1

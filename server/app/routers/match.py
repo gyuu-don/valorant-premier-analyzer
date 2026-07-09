@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
+from app.analytics.match_analysis import build_match_analysis
 from app.analytics.report import build_match_summaries
 from app.config import get_settings
 from app.henrik import endpoints
@@ -47,9 +48,20 @@ async def list_matches(
 
 @router.get("/match/{match_id}")
 async def get_match(match_id: str, region: str | None = None):
-    region = region or get_settings().premier_region
+    settings = get_settings()
+    region = region or settings.premier_region
     try:
         match = await endpoints.get_match(region, match_id)
     except HenrikError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-    return match.model_dump()
+
+    # Resolve our team id (to mark our side in the analysis); tolerate failure.
+    our_id: str | None = None
+    try:
+        team = await endpoints.get_configured_team()
+        our_id = team.id
+    except HenrikError:
+        our_id = None
+
+    analysis = build_match_analysis(match, our_id, settings.trade_window_ms)
+    return {**match.model_dump(), "analysis": analysis}

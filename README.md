@@ -73,8 +73,8 @@ npm run dev          # runs FastAPI + Vite together
 | **Overview** | Record, recent form, **advanced team MVP** card, attack/defense & economy win rates |
 | **Players** | ACS, K/D, ADR, KAST%, HS%, multikills, clutches + a per-player radar |
 | **Maps & Agents** | Per-map win rate + attack/defense round split, agent usage |
-| **Tactical** | Coaching callouts, entry duels, trades, holds/retakes, post-plant, utility |
-| **Match Deep-Dive** | Scoreboard + round-by-round timeline for a single match |
+| **Tactical** | Coaching callouts, entry duels, trades, holds/retakes, post-plant |
+| **Match Analysis** | Scoreboard (click a player) + per-player game breakdown, match-scoped Advanced Team MVP, round-by-round timeline |
 
 ### Global stage filter
 - A **stage dropdown in the header** scopes *every* page (Overview, Players, Maps, Tactical,
@@ -97,6 +97,13 @@ npm run dev          # runs FastAPI + Vite together
 - **Entries / trades / site play** — opening-duel win %, deaths-traded %, defense
   holds vs retakes, attack post-plant conversion. Side per round is inferred from spike
   plant events + the standard 12/12 half structure.
+- **Per-match player breakdown** — clicking a scoreboard player on the Match Analysis tab
+  opens a card with their agent (icon), that game's ACS/ADR/HS%/KAST/first-bloods/clutches,
+  the advanced-MVP impact rating + component breakdown, and **per-round utility usage** with
+  the agent's real ability names/icons (mapped from valorant-api.com). A match-scoped
+  Advanced Team MVP widget ranks your five players for that single game.
+- **Utility = usage only** — ability casts have no timestamps in the API, so utility is
+  reported as casts-per-round per ability slot (no kill/assist correlation is possible).
 - **Trade rate excludes untradeable deaths** — a death where you were the last player
   alive (no teammate to avenge) is removed from the denominator, so the rate reflects only
   situations where a trade was actually possible.

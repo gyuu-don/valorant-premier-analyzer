@@ -8,7 +8,7 @@ export default function Tactical() {
   if (!data || data.matches_analyzed === 0)
     return <div className="notice">No tactical data.</div>;
 
-  const { entries, trades, sites, utility, callouts, baseline } = data;
+  const { entries, trades, sites, callouts, baseline } = data;
 
   // Grade a metric against the opponent baseline (division norm).
   const vs = (ours: number, theirs?: number) => {
@@ -84,30 +84,6 @@ export default function Tactical() {
                 <td>{t.deaths_traded}</td>
                 <td>{t.deaths_traded_rate}%</td>
                 <td>{t.trade_kills}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Section>
-
-      <Section title="Utility effectiveness" note={utility?.note}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Player</th><th>Casts / round</th><th>Grenade</th><th>Ability 1</th>
-              <th>Ability 2</th><th>Ultimate</th><th>Assists / round</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(utility?.per_player ?? {}).map(([puuid, u]: [string, any]) => (
-              <tr key={puuid}>
-                <td className="name-cell">{u.name ?? nameOf(data, puuid)}</td>
-                <td>{u.casts_per_round}</td>
-                <td>{u.grenade_per_round}</td>
-                <td>{u.ability1_per_round}</td>
-                <td>{u.ability2_per_round}</td>
-                <td>{u.ultimate_per_round}</td>
-                <td>{u.assists_per_round}</td>
               </tr>
             ))}
           </tbody>

@@ -1,16 +1,7 @@
 import { useReport } from "../hooks";
 import { ErrorBox, Loading, Section, StatCard, WinRateBar } from "../components/common";
-import type { MvpEntry, Report } from "../types";
-
-const COMPONENT_LABELS: Record<string, string> = {
-  acs: "ACS",
-  kast: "KAST",
-  entry_win_rate: "Entry win %",
-  trade_contribution: "Trade contribution",
-  multikills: "Multikills",
-  clutches: "Clutches",
-  adr: "ADR",
-};
+import type { Report } from "../types";
+import { COMPONENT_LABELS, MvpRanking } from "../components/mvp";
 
 export default function Overview() {
   const { data, isLoading, error } = useReport();
@@ -81,29 +72,7 @@ export default function Overview() {
                 <strong>{mvp.official_mvp?.name}</strong>{" "}
                 <span className="subtle">({mvp.official_mvp?.score} pts)</span>
               </p>
-              <table className="mini-table">
-                <colgroup>
-                  <col className="mvp-col-name" />
-                  <col className="mvp-col-impact" />
-                </colgroup>
-                <thead>
-                  <tr><th>Player</th><th>Impact</th></tr>
-                </thead>
-                <tbody>
-                  {mvp.ranking.map((r) => (
-                    <tr key={r.puuid}>
-                      <td>{r.name}</td>
-                      <td>
-                        <ImpactCell
-                          entry={r}
-                          weights={mvp.weights}
-                          weightTotal={mvp.weight_total}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <MvpRanking ranking={mvp.ranking} weights={mvp.weights} weightTotal={mvp.weight_total} />
             </div>
           </div>
           <MvpExplainer mvp={mvp} />
@@ -206,53 +175,6 @@ function MvpExplainer({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
         </div>
       </div>
     </details>
-  );
-}
-
-function ImpactCell({
-  entry,
-  weights,
-  weightTotal,
-}: {
-  entry: MvpEntry;
-  weights?: Record<string, number>;
-  weightTotal?: number;
-}) {
-  const w = weights ?? {};
-  const total = weightTotal ?? (Object.values(w).reduce((a, b) => a + b, 0) || 1);
-  const rows = Object.keys(w).map((k) => {
-    const weight = w[k];
-    const norm = entry.components[k] ?? 0;
-    return { k, label: COMPONENT_LABELS[k] ?? k, weight, norm, contrib: weight * norm };
-  });
-  const sum = rows.reduce((a, r) => a + r.contrib, 0);
-
-  return (
-    <div className="impact-cell" tabIndex={0}>
-      <WinRateBar pct={entry.rating} />
-      <div className="impact-tip" role="tooltip">
-        <div className="tip-head">{entry.name} — impact {entry.rating}</div>
-        <table className="tip-table">
-          <thead>
-            <tr><th>Component</th><th>weight</th><th>× norm</th><th>= contrib</th></tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.k}>
-                <td>{r.label}</td>
-                <td>{r.weight.toFixed(2)}</td>
-                <td>{r.norm.toFixed(3)}</td>
-                <td>{r.contrib.toFixed(3)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="tip-total">
-          100 × {sum.toFixed(3)} ÷ {total.toFixed(2)} = <strong>{entry.rating}</strong>
-        </div>
-        <div className="tip-note">Each component is min-max normalized (0–1) across the roster.</div>
-      </div>
-    </div>
   );
 }
 

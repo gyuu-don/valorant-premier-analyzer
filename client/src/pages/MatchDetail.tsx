@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchMatch, fetchMatches, type MatchSummary } from "../api";
+import { fetchAgents, type AgentInfo } from "../agents";
 import { mapImage } from "../maps";
 import { useSeason } from "../season";
 import { ErrorBox, Loading, Section } from "../components/common";
+import { COMPONENT_LABELS, MvpRanking } from "../components/mvp";
+import type { MatchAnalysis, MatchPlayerAnalysis } from "../types";
+
+const UTIL_SLOTS: { key: string; fallback: string }[] = [
+  { key: "grenade", fallback: "Grenade" },
+  { key: "ability1", fallback: "Ability 1" },
+  { key: "ability2", fallback: "Ability 2" },
+  { key: "ultimate", fallback: "Ultimate" },
+];
 
 const FIRST_PAGE = 10;
 const NEXT_PAGE = 5;
@@ -123,21 +133,38 @@ export default function MatchDetail() {
 }
 
 function MatchView({ data }: { data: any }) {
+  const agents = useQuery({ queryKey: ["agents-full"], queryFn: fetchAgents, staleTime: Infinity });
   const players = [...(data.players ?? [])].sort(
     (a: any, b: any) => (b.stats?.score ?? 0) - (a.stats?.score ?? 0)
   );
   const rounds = data.rounds ?? [];
+  const analysis: MatchAnalysis | null = data.analysis ?? null;
+  const byPuuid = new Map((analysis?.players ?? []).map((p) => [p.puuid, p]));
+
+  // Default the player card to our team's match MVP, else the top scoreboard player.
+  const ourTeamRanking = (analysis?.mvp?.ranking ?? []).filter(
+    (r) => byPuuid.get(r.puuid)?.team === analysis?.our_team_id
+  );
+  const defaultPuuid = ourTeamRanking[0]?.puuid ?? players[0]?.puuid ?? null;
+  const [sel, setSel] = useState<string | null>(null);
+  const selectedPuuid = sel ?? defaultPuuid;
+  const selected = selectedPuuid ? byPuuid.get(selectedPuuid) ?? null : null;
 
   return (
     <>
-      <Section title={`${data.metadata?.map?.name ?? "Match"} — scoreboard`}>
+      <Section title={`${data.metadata?.map?.name ?? "Match"} — scoreboard`} note="Click a player for their game breakdown.">
         <table className="data-table">
           <thead>
             <tr><th>Player</th><th>Team</th><th>Agent</th><th>K</th><th>D</th><th>A</th><th>Score</th></tr>
           </thead>
           <tbody>
             {players.map((p: any) => (
-              <tr key={p.puuid}>
+              <tr
+                key={p.puuid}
+                className={p.puuid === selectedPuuid ? "selected" : ""}
+                onClick={() => setSel(p.puuid)}
+                style={{ cursor: "pointer" }}
+              >
                 <td className="name-cell">{p.name}#{p.tag}</td>
                 <td className={`team-${(p.team_id ?? "").toLowerCase()}`}>{p.team_id}</td>
                 <td>{p.agent?.name}</td>
@@ -150,6 +177,22 @@ function MatchView({ data }: { data: any }) {
           </tbody>
         </table>
       </Section>
+
+      {selected && (
+        <Section title={`Player breakdown — ${selected.name} (this game)`}>
+          <PlayerCard p={selected} agentInfo={agents.data?.[(selected.agent.name ?? "").toLowerCase()]} />
+        </Section>
+      )}
+
+      {ourTeamRanking.length > 0 && (
+        <Section title="Advanced Team MVP — this match" note="Impact rating computed from this game only, normalized across the lobby.">
+          <MvpRanking
+            ranking={ourTeamRanking}
+            weights={analysis?.mvp?.weights}
+            weightTotal={analysis?.mvp?.weight_total}
+          />
+        </Section>
+      )}
 
       <Section title="Round-by-round">
         <div className="round-timeline">
@@ -164,5 +207,87 @@ function MatchView({ data }: { data: any }) {
         <p className="hint">Cell color = round winner (Red / Blue). "plant" marks the bomb site.</p>
       </Section>
     </>
+  );
+}
+
+function PlayerCard({ p, agentInfo }: { p: MatchPlayerAnalysis; agentInfo?: AgentInfo }) {
+  const stats: { label: string; value: string | number }[] = [
+    { label: "ACS", value: p.acs },
+    { label: "ADR", value: p.adr },
+    { label: "HS%", value: `${p.hs_pct}%` },
+    { label: "K / D / A", value: `${p.kills} / ${p.deaths} / ${p.assists}` },
+    { label: "KAST", value: `${p.kast}%` },
+    { label: "First bloods", value: p.first_kills },
+    { label: "Multikills", value: p.multikill_rounds },
+    { label: "Clutches", value: p.clutches },
+  ];
+  const maxPr = Math.max(0.01, ...UTIL_SLOTS.map((s) => p.utility.per_round[s.key] ?? 0));
+
+  return (
+    <div className="player-card">
+      <div className="pc-header">
+        {agentInfo?.icon ? (
+          <img className="pc-agent" src={agentInfo.icon} alt={p.agent.name ?? ""} />
+        ) : (
+          <div className="pc-agent pc-agent-ph">{(p.agent.name ?? "?")[0]}</div>
+        )}
+        <div className="pc-title">
+          <div className="pc-name">{p.name}</div>
+          <div className="subtle">
+            {p.agent.name ?? "Unknown agent"} · <span className={`team-${p.team.toLowerCase()}`}>{p.team}</span>
+          </div>
+        </div>
+        {p.impact_rating != null && (
+          <div className="pc-impact">
+            <div className="pc-impact-val">{p.impact_rating}</div>
+            <div className="stat-label">Impact (this game)</div>
+          </div>
+        )}
+      </div>
+
+      <div className="pc-stats">
+        {stats.map((s) => (
+          <div className="pc-stat" key={s.label}>
+            <div className="pc-stat-val">{s.value}</div>
+            <div className="pc-stat-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pc-sections">
+        <div className="pc-section">
+          <h4>Utility usage / round</h4>
+          {UTIL_SLOTS.map((s) => {
+            const ability = agentInfo?.abilities?.[s.key];
+            const val = p.utility.per_round[s.key] ?? 0;
+            return (
+              <div className="util-row" key={s.key}>
+                {ability?.icon
+                  ? <img className="util-ic" src={ability.icon} alt={ability.name} />
+                  : <span className="util-ic util-ic-ph" />}
+                <span className="util-name">{ability?.name ?? s.fallback}</span>
+                <div className="pick-bar util-bar">
+                  <div className="pick-fill" style={{ width: `${(100 * val) / maxPr}%` }} />
+                </div>
+                <span className="util-val">{val}</span>
+              </div>
+            );
+          })}
+          <div className="util-total">Total utility: <strong>{p.utility.total_per_round}</strong> casts/round</div>
+        </div>
+
+        <div className="pc-section">
+          <h4>Impact breakdown (normalized 0–1)</h4>
+          <ul className="impact-breakdown">
+            {Object.entries(COMPONENT_LABELS).map(([k, label]) => (
+              <li key={k}>
+                <span>{label}</span>
+                <span className="ib-val">{(p.impact_components[k] ?? 0).toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
