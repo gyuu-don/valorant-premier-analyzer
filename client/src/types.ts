@@ -54,6 +54,8 @@ export interface Report {
     points?: number;
     wins?: number;
     losses?: number;
+    image?: string | null;
+    colors?: { primary?: string | null; secondary?: string | null; tertiary?: string | null };
   };
   matches_analyzed: number;
   warning?: string;

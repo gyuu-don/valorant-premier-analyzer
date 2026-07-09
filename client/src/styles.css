@@ -52,7 +52,26 @@ body {
 }
 .stage-filter select:disabled { opacity: 0.5; cursor: default; }
 
-.content { flex: 1; padding: 24px; max-width: 1180px; margin: 0 auto; width: 100%; }
+.content { flex: 1; padding: 24px; max-width: 1180px; margin: 0 auto; width: 100%; position: relative; z-index: 1; }
+
+/* Team icon watermark in the left/right negative space (wide viewports only). */
+.side-banner {
+  position: fixed; top: 68px; bottom: 0; z-index: 0; pointer-events: none;
+  width: calc((100vw - 1180px) / 2);
+  display: none;
+  background-repeat: no-repeat; background-position: center;
+  background-size: min(220px, 68%);
+  opacity: 0.16;
+}
+.side-banner::before {
+  content: ""; position: absolute; inset: 0;
+  opacity: 0.6;
+}
+.side-banner.left { left: 0; }
+.side-banner.left::before { background: linear-gradient(to left, transparent, var(--team-primary)); }
+.side-banner.right { right: 0; }
+.side-banner.right::before { background: linear-gradient(to right, transparent, var(--team-primary)); }
+@media (min-width: 1500px) { .side-banner { display: block; } }
 .footer { text-align: center; color: var(--muted); padding: 16px; font-size: 1rem; border-top: 1px solid var(--border); }
 
 .page-head { margin-bottom: 20px; }

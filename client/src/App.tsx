@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import Overview from "./pages/Overview";
 import Players from "./pages/Players";
@@ -5,6 +6,14 @@ import MapsAgents from "./pages/MapsAgents";
 import Tactical from "./pages/Tactical";
 import MatchDetail from "./pages/MatchDetail";
 import { useSeason, stageLabel } from "./season";
+import { useReport } from "./hooks";
+
+function bannerStyle(image: string, primary?: string | null): CSSProperties {
+  return {
+    backgroundImage: `url(${image})`,
+    ["--team-primary" as string]: primary ?? "transparent",
+  } as CSSProperties;
+}
 
 const NAV = [
   { to: "/", label: "Overview", end: true },
@@ -16,8 +25,16 @@ const NAV = [
 
 export default function App() {
   const { season, setSeason, stages, loading } = useSeason();
+  const { data: report } = useReport();
+  const team = report?.team;
   return (
     <div className="app">
+      {team?.image && (
+        <>
+          <div className="side-banner left" style={bannerStyle(team.image, team.colors?.primary)} />
+          <div className="side-banner right" style={bannerStyle(team.image, team.colors?.primary)} />
+        </>
+      )}
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark">▲</span> Valorant Premier Analyzer

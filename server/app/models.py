@@ -233,6 +233,14 @@ class PremierPlacement(_Base):
     place: Optional[int] = None
 
 
+class PremierCustomization(_Base):
+    icon: Optional[str] = None
+    image: Optional[str] = None      # ready-to-use team-icon URL (rendered in team colors)
+    primary: Optional[str] = None
+    secondary: Optional[str] = None
+    tertiary: Optional[str] = None
+
+
 class PremierTeam(_Base):
     id: Optional[str] = None
     name: Optional[str] = None
@@ -240,6 +248,7 @@ class PremierTeam(_Base):
     enrolled: Optional[bool] = None
     stats: PremierStats = Field(default_factory=PremierStats)
     placement: PremierPlacement = Field(default_factory=PremierPlacement)
+    customization: PremierCustomization = Field(default_factory=PremierCustomization)
     # Roster from the /premier/{name}/{tag} endpoint; frequently empty — the reliable
     # roster comes from teams[].premier_roster on each match instead.
     member: list = Field(default_factory=list)
@@ -255,6 +264,12 @@ class PremierTeam(_Base):
             "points": self.placement.points,
             "wins": self.stats.wins,
             "losses": self.stats.losses,
+            "image": self.customization.image,
+            "colors": {
+                "primary": self.customization.primary,
+                "secondary": self.customization.secondary,
+                "tertiary": self.customization.tertiary,
+            },
         }
 
 
