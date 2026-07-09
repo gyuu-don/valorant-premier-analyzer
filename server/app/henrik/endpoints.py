@@ -63,21 +63,43 @@ async def get_configured_team() -> PremierTeam:
     return await get_team(settings.premier_team_name, settings.premier_team_tag)
 
 
-async def load_recent_matches(
-    team: PremierTeam, limit: int, region: Optional[str] = None
-) -> list[MatchV4]:
-    """Resolve a team's recent Premier match IDs into full match details."""
-    settings = get_settings()
-    region = region or settings.premier_region
+async def _sorted_history(team: PremierTeam):
+    """Team history entries with a resolvable id, sorted most-recent first."""
     history = await get_team_history(team.id) if team.id else []
-    match_ids = [h.resolved_match_id for h in history if h.resolved_match_id]
-    match_ids = match_ids[:limit]
+    entries = [h for h in history if h.resolved_match_id]
+    entries.sort(key=lambda h: h.started_at or "", reverse=True)
+    return entries
 
+
+async def _load_ids(match_ids: list[str], region: str) -> list[MatchV4]:
     matches: list[MatchV4] = []
     for mid in match_ids:
         try:
             matches.append(await get_match(region, mid))
         except Exception:
-            # Skip individual matches that fail to load rather than failing the report.
+            # Skip individual matches that fail to load rather than failing the batch.
             continue
     return matches
+
+
+async def load_recent_matches(
+    team: PremierTeam, limit: int, region: Optional[str] = None
+) -> list[MatchV4]:
+    """Resolve a team's most-recent Premier match IDs into full match details."""
+    settings = get_settings()
+    region = region or settings.premier_region
+    entries = await _sorted_history(team)
+    return await _load_ids([h.resolved_match_id for h in entries[:limit]], region)
+
+
+async def load_match_page(
+    team: PremierTeam, offset: int, limit: int, region: Optional[str] = None
+) -> tuple[list[MatchV4], bool, int]:
+    """A page of match details (most-recent first) plus (has_more, total) for infinite scroll."""
+    settings = get_settings()
+    region = region or settings.premier_region
+    entries = await _sorted_history(team)
+    total = len(entries)
+    page_ids = [h.resolved_match_id for h in entries[offset : offset + limit]]
+    matches = await _load_ids(page_ids, region)
+    return matches, offset + limit < total, total

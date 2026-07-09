@@ -23,6 +23,26 @@ export const fetchTeam = () => getJson<any>("/api/team");
 export const fetchTeamHistory = () =>
   getJson<{ team_id: string; history: any[] }>("/api/team/history");
 
+export interface MatchSummary {
+  match_id: string;
+  started_at?: string | null;
+  map: string;
+  opponent: string;
+  result: "W" | "L";
+  score: string;
+}
+
+export interface MatchPage {
+  matches: MatchSummary[];
+  offset: number;
+  next_offset: number;
+  has_more: boolean;
+  total: number;
+}
+
+export const fetchMatches = (offset = 0, limit = 10) =>
+  getJson<MatchPage>(`/api/matches?offset=${offset}&limit=${limit}`);
+
 export const fetchMatch = (matchId: string) =>
   getJson<any>(`/api/match/${matchId}`);
 

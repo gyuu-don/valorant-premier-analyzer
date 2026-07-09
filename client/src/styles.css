@@ -122,6 +122,35 @@ body {
   border-radius: 6px; padding: 8px 10px; min-width: 260px;
 }
 
+/* Match Deep-Dive: scrollable single-column list of match cards with map art.
+   The list fills down toward the bottom of the viewport and scrolls internally,
+   sized so roughly 6-8 cards are visible at a time. */
+.match-list {
+  height: calc(100vh - 300px); min-height: 440px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px; padding-right: 6px;
+}
+.match-card {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; text-align: left; cursor: pointer; color: var(--text);
+  background-color: var(--panel-2); background-size: cover; background-position: center 30%;
+  border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; min-height: 92px;
+  transition: border-color .15s ease, transform .04s ease;
+}
+.match-card:hover { border-color: var(--muted); }
+.match-card:active { transform: scale(0.995); }
+.match-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mc-body { display: flex; flex-direction: column; gap: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+.mc-date { font-size: 13px; color: #c9cfdb; }
+.mc-opp { font-size: 18px; font-weight: 700; }
+.mc-map { font-size: 12px; color: #c9cfdb; text-transform: uppercase; letter-spacing: 0.5px; }
+.mc-result { display: flex; flex-direction: column; align-items: flex-end; min-width: 64px; text-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+.mc-wl { font-size: 26px; font-weight: 800; line-height: 1; }
+.mc-result.win .mc-wl { color: var(--good); }
+.mc-result.loss .mc-wl { color: var(--bad); }
+.mc-score { font-size: 14px; font-weight: 700; margin-top: 4px; }
+.match-list-sentinel { flex: 0 0 auto; text-align: center; color: var(--muted); font-size: 12px; padding: 10px 0 4px; }
+
 .round-timeline { display: flex; flex-wrap: wrap; gap: 6px; }
 .round-cell { width: 60px; padding: 6px; border-radius: 6px; text-align: center; background: var(--panel-2); border: 1px solid var(--border); }
 .round-cell.win-red { border-color: var(--accent); }

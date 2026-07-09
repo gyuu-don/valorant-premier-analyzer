@@ -1,11 +1,82 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchMatch, fetchTeamHistory } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { fetchMatch, fetchMatches, type MatchSummary } from "../api";
+import { mapImage } from "../maps";
 import { ErrorBox, Loading, Section } from "../components/common";
 
+const FIRST_PAGE = 10;
+const NEXT_PAGE = 5;
+
+function fmtDate(d?: string | null): string {
+  if (!d) return "";
+  const dt = new Date(d);
+  return isNaN(dt.getTime())
+    ? d
+    : dt.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+function MatchCard({
+  m,
+  selected,
+  onSelect,
+}: {
+  m: MatchSummary;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const img = mapImage(m.map);
+  const bg = img
+    ? `linear-gradient(90deg, rgba(15,17,21,0.55), rgba(15,17,21,0.9)), url(${img})`
+    : undefined;
+  return (
+    <button
+      type="button"
+      className={`match-card ${selected ? "selected" : ""}`}
+      onClick={onSelect}
+      style={bg ? { backgroundImage: bg } : undefined}
+    >
+      <div className="mc-body">
+        <div className="mc-date">{fmtDate(m.started_at)}</div>
+        <div className="mc-opp">vs {m.opponent}</div>
+        <div className="mc-map">{m.map}</div>
+      </div>
+      <div className={`mc-result ${m.result === "W" ? "win" : "loss"}`}>
+        <span className="mc-wl">{m.result}</span>
+        <span className="mc-score">{m.score}</span>
+      </div>
+    </button>
+  );
+}
+
 export default function MatchDetail() {
-  const history = useQuery({ queryKey: ["history"], queryFn: fetchTeamHistory });
   const [matchId, setMatchId] = useState<string>("");
+
+  const {
+    data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["matches-infinite"],
+    queryFn: ({ pageParam }) => fetchMatches(pageParam, pageParam === 0 ? FIRST_PAGE : NEXT_PAGE),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.has_more ? last.next_offset : undefined),
+  });
+
+  const items = (data?.pages.flatMap((p) => p.matches) ?? []).filter((m) => m.match_id);
+
+  // Load more when the sentinel at the bottom of the list scrolls into view.
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage();
+      },
+      { root: listRef.current, rootMargin: "80px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const match = useQuery({
     queryKey: ["match", matchId],
@@ -13,33 +84,31 @@ export default function MatchDetail() {
     enabled: !!matchId,
   });
 
-  const options: { id: string; label: string }[] =
-    history.data?.history
-      ?.map((h: any) => ({
-        id: h.match_id ?? h.id,
-        label: `${h.match_id ?? h.id}${h.started_at ? ` · ${h.started_at}` : ""}`,
-      }))
-      .filter((o: any) => o.id) ?? [];
-
   return (
     <div className="page">
       <div className="page-head"><h1>Match Deep-Dive</h1></div>
 
-      <Section title="Select a match">
-        {history.isLoading && <span className="subtle">Loading match list…</span>}
-        {history.error && <ErrorBox error={history.error} />}
-        <div className="match-picker">
-          <select value={matchId} onChange={(e) => setMatchId(e.target.value)}>
-            <option value="">— choose a Premier match —</option>
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>{o.label}</option>
-            ))}
-          </select>
-          <input
-            placeholder="…or paste a match ID"
-            value={matchId}
-            onChange={(e) => setMatchId(e.target.value.trim())}
-          />
+      <Section title="Select a match" note="Most recent first — scroll to load older matches.">
+        {isLoading && <span className="subtle">Loading match list…</span>}
+        {error && <ErrorBox error={error} />}
+        <div className="match-list" ref={listRef}>
+          {items.map((m) => (
+            <MatchCard
+              key={m.match_id}
+              m={m}
+              selected={m.match_id === matchId}
+              onSelect={() => setMatchId(m.match_id)}
+            />
+          ))}
+          <div ref={sentinelRef} className="match-list-sentinel">
+            {isFetchingNextPage
+              ? "Loading more…"
+              : hasNextPage
+              ? "Scroll for more"
+              : items.length > 0
+              ? "No more matches"
+              : ""}
+          </div>
         </div>
       </Section>
 

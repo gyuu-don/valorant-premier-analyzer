@@ -89,6 +89,34 @@ def _callouts(sides: dict, sites: dict, entries: dict, trades: dict, baseline: d
     return notes
 
 
+def build_match_summaries(team: PremierTeam, matches: list[MatchV4]) -> list[dict]:
+    """Per-match summary rows for the deep-dive picker, sorted most-recent first."""
+    out: list[dict] = []
+    for m in matches:
+        ctx = build_context(m, team.id) if team.id else None
+        if ctx is None:
+            continue
+        opp = next((t for t in m.teams if t.team_id == ctx.opp_team_id), None)
+        opponent = (
+            opp.premier_roster.name
+            if opp and opp.premier_roster and opp.premier_roster.name
+            else "Unknown"
+        )
+        our = next((t for t in m.teams if t.team_id == ctx.our_team_id), None)
+        won = our.rounds.won if our else 0
+        lost = our.rounds.lost if our else 0
+        out.append({
+            "match_id": m.metadata.match_id,
+            "started_at": m.metadata.started_at,
+            "map": m.metadata.map_name,
+            "opponent": opponent,
+            "result": "W" if ctx.team_won else "L",
+            "score": f"{won}-{lost}",
+        })
+    out.sort(key=lambda x: x["started_at"] or "", reverse=True)
+    return out
+
+
 def _tactical_summary(contexts, window: int) -> dict:
     """Compute the tactical metrics used for the opponent baseline comparison."""
     data = all_breakdowns(contexts, window)
