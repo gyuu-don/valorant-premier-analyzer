@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
 import { fetchAgentIcons } from "../agents";
 import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
+import { TeamMvpSection } from "../components/mvp";
 import type { PlayerRow } from "../types";
 
 const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
@@ -48,6 +49,7 @@ export default function Players() {
   return (
     <div className="page">
       <div className="page-head"><h1>Player Performance</h1></div>
+      {data?.mvp && <TeamMvpSection mvp={data.mvp} />}
       <Section title="Roster stats">
         <table className="data-table">
           <thead>
