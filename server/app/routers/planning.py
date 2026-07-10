@@ -42,6 +42,12 @@ def _poll_text(message: dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+def _poll_question(message: dict[str, Any]) -> str:
+    poll = message.get("poll") or {}
+    question = poll.get("question") or {}
+    return str(question.get("text") or "Discord poll")
+
+
 def _find_map(text: str) -> str:
     for map_name in VALORANT_MAPS:
         if re.search(rf"\b{re.escape(map_name)}\b", text, flags=re.IGNORECASE):
@@ -207,6 +213,7 @@ async def get_planning():
         for message in messages:
             poll = message.get("poll") or {}
             poll_text = _poll_text(message)
+            question = _poll_question(message)
             for idx, answer in enumerate(poll.get("answers") or [], start=1):
                 answer_id = int(answer.get("answer_id") or idx)
                 media = answer.get("poll_media") or {}
@@ -228,6 +235,8 @@ async def get_planning():
                     {
                         "id": slot_id,
                         "poll_id": str(message["id"]),
+                        "poll_question": question,
+                        "poll_created_at": message.get("timestamp"),
                         "option": str(answer_id),
                         "choice": choice,
                         "map": _find_map(poll_text),

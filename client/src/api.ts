@@ -81,6 +81,8 @@ export interface PlanningPlayer {
 export interface PlanningMatch {
   id: string;
   poll_id?: string;
+  poll_question?: string;
+  poll_created_at?: string | null;
   option?: string;
   choice?: string;
   map: string;

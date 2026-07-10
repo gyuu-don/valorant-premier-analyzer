@@ -42,9 +42,24 @@ export default function Planning() {
         </div>
       )}
 
-      <div className="planning-grid">
-        {data.matches.map((match) => (
-          <PlanningCard key={match.id} match={match} />
+      <div className="poll-groups">
+        {groupByPoll(data.matches).map((poll) => (
+          <section className="poll-group" key={poll.id}>
+            <div className="poll-group-head">
+              <div>
+                <h2>{poll.question}</h2>
+                <div className="subtle">{poll.createdAt ? formatDate(poll.createdAt) : "Poll date unknown"}</div>
+              </div>
+              <a className="poll-link poll-group-link" href={poll.url} target="_blank" rel="noreferrer">
+                Poll
+              </a>
+            </div>
+            <div className="planning-grid">
+              {poll.matches.map((match) => (
+                <PlanningCard key={match.id} match={match} />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>
@@ -81,9 +96,6 @@ function PlanningCard({ match }: { match: PlanningMatch }) {
           <div className="planning-kicker">Option {option} - {slot}</div>
           <h2>{match.map}</h2>
         </div>
-        <a className="poll-link" href={match.poll_url} target="_blank" rel="noreferrer">
-          Poll
-        </a>
       </div>
 
       <div className="planning-body">
@@ -111,6 +123,29 @@ function PlanningCard({ match }: { match: PlanningMatch }) {
       </div>
     </article>
   );
+}
+
+function groupByPoll(matches: PlanningMatch[]) {
+  const groups = new Map<
+    string,
+    { id: string; question: string; createdAt?: string | null; url: string; matches: PlanningMatch[] }
+  >();
+  for (const match of matches) {
+    const id = match.poll_id || match.id;
+    const group = groups.get(id);
+    if (group) {
+      group.matches.push(match);
+      continue;
+    }
+    groups.set(id, {
+      id,
+      question: match.poll_question || "Discord poll",
+      createdAt: match.poll_created_at,
+      url: match.poll_url,
+      matches: [match],
+    });
+  }
+  return Array.from(groups.values());
 }
 
 function formatDate(value?: string | null): string {
