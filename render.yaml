@@ -17,3 +17,11 @@ services:
         value: "25"
       - key: TRADE_WINDOW_MS
         value: "3000"
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_GUILD_ID
+        value: "1524872548800794803"
+      - key: DISCORD_CHANNEL_ID
+        value: "1524873462768734451"
+      - key: DISCORD_POLL_SCAN_LIMIT
+        value: "500"
