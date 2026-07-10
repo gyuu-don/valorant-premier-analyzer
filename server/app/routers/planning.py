@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from app.config import get_settings
 
@@ -78,12 +79,12 @@ def _display_user(user: dict[str, Any]) -> str:
     return str(username or user.get("id") or "Unknown")
 
 
-def _pick_igl(slot_id: str, players: list[dict[str, str]]) -> dict[str, str] | None:
-    """Pick IGLs predictably between refreshes, but reshuffle while a slot is not full.
+class IglSelection(BaseModel):
+    player_id: str
 
-    Under 5 voters, any change to the voter set triggers a new random pick. Once a slot
-    reaches 5 voters, keep the current IGL unless that user is no longer available.
-    """
+
+def _sync_igl_state(slot_id: str, players: list[dict[str, str]]) -> dict[str, str] | None:
+    """Keep the chosen IGL only while that player is still available."""
     if not players:
         _igl_state.pop(slot_id, None)
         return None
@@ -92,24 +93,33 @@ def _pick_igl(slot_id: str, players: list[dict[str, str]]) -> dict[str, str] | N
     voter_signature = ",".join(sorted(player_ids))
     current = _igl_state.get(slot_id)
 
-    if len(players) < IGL_LOCK_THRESHOLD:
-        if current and current.get("voter_signature") == voter_signature:
-            igl = current.get("igl")
-            if igl and igl.get("id") in player_ids:
-                return igl
-        igl = random.choice(players)
-        _igl_state[slot_id] = {"voter_signature": voter_signature, "igl": igl, "locked": False}
-        return igl
-
     if current:
         igl = current.get("igl")
+        current["available_players"] = players
+        current["voter_signature"] = voter_signature
         if igl and igl.get("id") in player_ids:
-            _igl_state[slot_id] = {"voter_signature": voter_signature, "igl": igl, "locked": True}
             return igl
+        current["igl"] = None
+        return None
 
-    igl = random.choice(players)
-    _igl_state[slot_id] = {"voter_signature": voter_signature, "igl": igl, "locked": True}
-    return igl
+    _igl_state[slot_id] = {
+        "available_players": players,
+        "voter_signature": voter_signature,
+        "igl": None,
+        "locked": False,
+    }
+    return None
+
+
+def _available_player(slot_id: str, player_id: str) -> dict[str, str]:
+    current = _igl_state.get(slot_id)
+    players = current.get("available_players") if current else None
+    if not players:
+        raise HTTPException(status_code=409, detail="Refresh planning before choosing an IGL.")
+    for player in players:
+        if player["id"] == player_id:
+            return player
+    raise HTTPException(status_code=400, detail="Selected IGL is not available for this option.")
 
 
 def _headers(token: str) -> dict[str, str]:
@@ -230,7 +240,7 @@ async def get_planning():
                     if not user.get("bot")
                 ]
                 slot_id = f"{message['id']}:{answer_id}"
-                igl = _pick_igl(slot_id, available_players)
+                igl = _sync_igl_state(slot_id, available_players)
                 matches.append(
                     {
                         "id": slot_id,
@@ -253,3 +263,27 @@ async def get_planning():
         "missing": [],
         "source": "discord_poll",
     }
+
+
+@router.post("/planning/{slot_id}/igl")
+async def set_planning_igl(slot_id: str, selection: IglSelection):
+    player = _available_player(slot_id, selection.player_id)
+    current = _igl_state.setdefault(slot_id, {})
+    current["igl"] = player
+    current["locked"] = True
+    return {"igl": player}
+
+
+@router.post("/planning/{slot_id}/igl/shuffle")
+async def shuffle_planning_igl(slot_id: str):
+    current = _igl_state.get(slot_id)
+    players = current.get("available_players") if current else None
+    if not players:
+        raise HTTPException(status_code=409, detail="Refresh planning before shuffling IGL.")
+    if len(players) < IGL_LOCK_THRESHOLD:
+        raise HTTPException(status_code=400, detail="Shuffle IGL requires at least 5 available players.")
+
+    igl = random.choice(players)
+    current["igl"] = igl
+    current["locked"] = True
+    return {"igl": igl}
