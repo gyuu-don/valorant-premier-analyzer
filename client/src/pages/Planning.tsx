@@ -1,5 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchPlanning, type PlanningMatch } from "../api";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchPlanning,
+  setPlanningIgl,
+  shufflePlanningIgl,
+  type PlanningMatch,
+} from "../api";
 import { Loading } from "../components/common";
 import { mapImage } from "../maps";
 
@@ -18,7 +24,7 @@ export default function Planning() {
       <div className="page-head planning-head">
         <div>
           <h1>Match Planning</h1>
-          <div className="subtle">Discord poll choices - Random IGL per slot</div>
+          <div className="subtle">Discord poll choices - Manual IGL selection per slot</div>
         </div>
         <button className="chip-btn" type="button" onClick={() => refetch()} disabled={isFetching}>
           {isFetching ? "Refreshing..." : "Refresh"}
@@ -81,10 +87,26 @@ function PlanningError({ error }: { error: unknown }) {
 }
 
 function PlanningCard({ match }: { match: PlanningMatch }) {
+  const queryClient = useQueryClient();
+  const [isIglMenuOpen, setIsIglMenuOpen] = useState(false);
   const image = mapImage(match.map);
   const iglId = match.igl?.id;
   const slot = match.choice || formatDate(match.starts_at);
   const option = match.option || "?";
+  const canShuffle = match.available_players.length >= 5;
+
+  const selectIgl = useMutation({
+    mutationFn: (playerId: string) => setPlanningIgl(match.id, playerId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["planning"] }),
+  });
+
+  const shuffleIgl = useMutation({
+    mutationFn: () => shufflePlanningIgl(match.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["planning"] }),
+  });
+
+  const actionError = selectIgl.error ?? shuffleIgl.error;
+  const isUpdating = selectIgl.isPending || shuffleIgl.isPending;
 
   return (
     <article className="planning-card">
@@ -103,10 +125,58 @@ function PlanningCard({ match }: { match: PlanningMatch }) {
           <span className="stat-label">Available</span>
           <strong>{match.available_players.length}</strong>
         </div>
-        {match.igl && (
-          <div className="igl-banner">
+        <div className="igl-banner">
+          <div>
             <span className="stat-label">IGL</span>
-            <strong>{match.igl.name}</strong>
+            <strong>{match.igl?.name ?? "Not selected"}</strong>
+          </div>
+          <button
+            className="chip-btn"
+            type="button"
+            onClick={() => shuffleIgl.mutate()}
+            disabled={!canShuffle || isUpdating}
+            title={canShuffle ? "Shuffle IGL" : "Shuffle requires at least 5 available players"}
+          >
+            {shuffleIgl.isPending ? "Shuffling..." : "Shuffle IGL"}
+          </button>
+        </div>
+        <div className="igl-picker">
+          <span className="stat-label">Manual IGL</span>
+          <div className="igl-menu">
+            <button
+              className="igl-menu-trigger"
+              type="button"
+              onClick={() => setIsIglMenuOpen((open) => !open)}
+              disabled={match.available_players.length === 0 || isUpdating}
+              aria-haspopup="listbox"
+              aria-expanded={isIglMenuOpen}
+            >
+              {match.igl?.name ?? "Select IGL"}
+            </button>
+            {isIglMenuOpen && (
+              <div className="igl-menu-list" role="listbox" aria-label={`IGL for option ${option}`}>
+                {match.available_players.map((player) => (
+                  <button
+                    key={player.id}
+                    className={player.id === iglId ? "igl-menu-option selected" : "igl-menu-option"}
+                    type="button"
+                    role="option"
+                    aria-selected={player.id === iglId}
+                    onClick={() => {
+                      setIsIglMenuOpen(false);
+                      selectIgl.mutate(player.id);
+                    }}
+                  >
+                    {player.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        {actionError && (
+          <div className="notice compact error">
+            {actionError instanceof Error ? actionError.message : String(actionError)}
           </div>
         )}
         {match.available_players.length > 0 ? (

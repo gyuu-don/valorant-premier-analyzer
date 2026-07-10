@@ -15,6 +15,25 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function postJson<T>(url: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const payload = await res.json();
+      detail = payload.detail ?? detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`${res.status}: ${detail}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 const seasonParam = (season?: string | null) =>
   season && season !== "all" ? `season=${encodeURIComponent(season)}` : "";
 
@@ -100,3 +119,13 @@ export interface PlanningPage {
 }
 
 export const fetchPlanning = () => getJson<PlanningPage>("/api/planning");
+
+export const setPlanningIgl = (matchId: string, playerId: string) =>
+  postJson<{ igl: PlanningPlayer }>(`/api/planning/${encodeURIComponent(matchId)}/igl`, {
+    player_id: playerId,
+  });
+
+export const shufflePlanningIgl = (matchId: string) =>
+  postJson<{ igl: PlanningPlayer }>(
+    `/api/planning/${encodeURIComponent(matchId)}/igl/shuffle`
+  );
