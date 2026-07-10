@@ -36,6 +36,12 @@ class Settings(BaseSettings):
         default="http://localhost:5173", alias="CORS_ORIGINS"
     )
 
+    # Discord poll planning
+    discord_bot_token: str = Field(default="", alias="DISCORD_BOT_TOKEN")
+    discord_channel_id: str = Field(default="", alias="DISCORD_CHANNEL_ID")
+    discord_guild_id: str = Field(default="", alias="DISCORD_GUILD_ID")
+    discord_poll_scan_limit: int = Field(default=500, alias="DISCORD_POLL_SCAN_LIMIT")
+
     # Analysis tuning
     max_matches: int = Field(default=25, alias="MAX_MATCHES")
     trade_window_ms: int = Field(default=4000, alias="TRADE_WINDOW_MS")

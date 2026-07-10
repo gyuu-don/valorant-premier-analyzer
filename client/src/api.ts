@@ -72,3 +72,29 @@ export const fetchHealth = () =>
   getJson<{ status: string; team_configured: boolean; api_key_present: boolean }>(
     "/api/health"
   );
+
+export interface PlanningPlayer {
+  id: string;
+  name: string;
+}
+
+export interface PlanningMatch {
+  id: string;
+  poll_id?: string;
+  option?: string;
+  choice?: string;
+  map: string;
+  starts_at?: string | null;
+  poll_url: string;
+  available_players: PlanningPlayer[];
+  igl?: PlanningPlayer | null;
+}
+
+export interface PlanningPage {
+  matches: PlanningMatch[];
+  configured: boolean;
+  missing: string[];
+  source: "discord_poll";
+}
+
+export const fetchPlanning = () => getJson<PlanningPage>("/api/planning");

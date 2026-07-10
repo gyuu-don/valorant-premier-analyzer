@@ -5,6 +5,7 @@ import Players from "./pages/Players";
 import MapsAgents from "./pages/MapsAgents";
 import Tactical from "./pages/Tactical";
 import MatchDetail from "./pages/MatchDetail";
+import Planning from "./pages/Planning";
 import { useSeason, stageLabel } from "./season";
 import { useReport } from "./hooks";
 import { StatParamsProvider } from "./statParams";
@@ -22,6 +23,7 @@ const NAV = [
   { to: "/maps", label: "Maps & Agents" },
   { to: "/tactical", label: "Gameplay" },
   { to: "/matches", label: "Match Analysis" },
+  { to: "/planning", label: "Planning" },
 ];
 
 export default function App() {
@@ -72,6 +74,7 @@ export default function App() {
           <Route path="/maps" element={<MapsAgents />} />
           <Route path="/tactical" element={<Tactical />} />
           <Route path="/matches" element={<MatchDetail />} />
+          <Route path="/planning" element={<Planning />} />
         </Routes>
       </main>
       <footer className="footer">

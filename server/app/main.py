@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.henrik.client import client
-from app.routers import analytics, match, stages, team
+from app.routers import analytics, match, planning, stages, team
 
 # Built frontend (client/dist), present in production/Docker; absent during local API-only dev.
 DIST = Path(__file__).resolve().parents[2] / "client" / "dist"
@@ -46,6 +46,7 @@ def create_app() -> FastAPI:
     app.include_router(match.router)
     app.include_router(analytics.router)
     app.include_router(stages.router)
+    app.include_router(planning.router)
 
     @app.get("/api/health")
     async def health() -> dict:
