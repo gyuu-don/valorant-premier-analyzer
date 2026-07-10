@@ -186,6 +186,12 @@ export const STAT_INFO: Record<string, StatDef> = {
     desc: "Average in-round time at which your team planted the spike (seconds from round start).",
   },
 
+  // Spike sites (aggregate)
+  post_plant_conversion_by_site: {
+    label: "Site win rate",
+    desc: "Attack round win rate when your team planted on this site (aggregate across all matches).",
+  },
+
   // Utility (per-match, usage only)
   utility_usage: {
     label: "Utility usage",

@@ -16,6 +16,7 @@ def compute_sites(
     # Attack
     atk_rounds = atk_wins = 0
     plants = post_plant_wins = 0            # attack rounds where we planted
+    by_site: dict[str, dict] = {}           # aggregated by plant site
 
     for _ctx, rounds in data:
         for rb in rounds:
@@ -34,6 +35,11 @@ def compute_sites(
                 if rb.we_planted:
                     plants += 1
                     post_plant_wins += int(rb.won)
+                    # Aggregate by site
+                    if rb.plant_site:
+                        site_data = by_site.setdefault(rb.plant_site, {"plants": 0, "wins": 0})
+                        site_data["plants"] += 1
+                        site_data["wins"] += int(rb.won)
 
     return {
         "defense": {
@@ -49,5 +55,9 @@ def compute_sites(
             "rounds": atk_rounds,
             "post_plant_conversion": pct(post_plant_wins, plants),
             "plants": plants,
+            "by_site": {
+                s: {"plants": d["plants"], "win_rate": pct(d["wins"], d["plants"])}
+                for s, d in sorted(by_site.items())
+            },
         },
     }

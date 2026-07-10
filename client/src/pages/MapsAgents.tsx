@@ -7,6 +7,7 @@ import { fetchMapDetail } from "../api";
 import { fetchMaps } from "../maps";
 import { ErrorBox, InfoLabel, Loading, Section, WinRateBar, WinRateCell, Delta } from "../components/common";
 import { Heatmap } from "../components/heatmap";
+import PostPlantConversionSection from "../features/PostPlantConversionSection";
 
 const ALL = "all";
 
@@ -45,6 +46,10 @@ export default function MapsAgents() {
       : Object.entries(mapDetail.data?.maps[selectedMap]?.agents ?? {});
 
   const rowClass = (name: string) => (selectedMap === name ? "selected" : "");
+
+  const postPlantBySiteData = selectedMap === ALL
+    ? data?.sites?.attack?.by_site
+    : mapDetail.data?.maps[selectedMap]?.sites?.attack?.by_site;
 
   return (
     <div className="page">
@@ -88,6 +93,8 @@ export default function MapsAgents() {
         </table>
         <p className="hint">Click a map row to filter the heatmap and agent usage below.</p>
       </Section>
+
+      <PostPlantConversionSection selectedMap={selectedMap} postPlantBySite={postPlantBySiteData} />
 
       <Section
         title={selectedMap === ALL ? "Heatmap" : `Heatmap — ${selectedMap}`}

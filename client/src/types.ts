@@ -103,6 +103,23 @@ export interface MapDetail {
     {
       positions: NonNullable<MatchAnalysis["positions"]>;
       agents: Record<string, { games: number; wins: number; win_rate: number }>;
+      sites: {
+        defense: {
+          round_win_rate: number;
+          rounds: number;
+          hold_success_rate: number;
+          hold_opportunities: number;
+          retake_success_rate: number;
+          retake_opportunities: number;
+        };
+        attack: {
+          round_win_rate: number;
+          rounds: number;
+          post_plant_conversion: number;
+          plants: number;
+          by_site: Record<string, { plants: number; win_rate: number }>;
+        };
+      };
     }
   >;
 }
@@ -171,6 +188,7 @@ export interface Report {
       rounds: number;
       post_plant_conversion: number;
       plants: number;
+      by_site: Record<string, { plants: number; win_rate: number }>;
     };
   };
   entries?: {
