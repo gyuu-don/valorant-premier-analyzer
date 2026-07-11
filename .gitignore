@@ -23,3 +23,12 @@ client/dist/
 .DS_Store
 .idea/
 .vscode/
+
+# Scratch / temp data dumps
+tmp/
+
+# Generated reports
+reports/
+
+# Claude Code
+.claude/
