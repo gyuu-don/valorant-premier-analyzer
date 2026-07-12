@@ -116,7 +116,7 @@ export function MvpExplainer({ mvp }: { mvp: NonNullable<Report["mvp"]> }) {
   const acsN = example?.components["acs"] ?? 0;
 
   return (
-    <details className="mvp-explainer" open>
+    <details className="mvp-explainer">
       <summary>How is the impact rating calculated?</summary>
       <div className="explainer-body">
         <p>
