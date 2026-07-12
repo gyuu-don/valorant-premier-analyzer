@@ -11,6 +11,9 @@ def _new_row(puuid: str) -> dict:
         "name": None,
         "card": None,
         "agents": {},
+        "agent_wins": {},
+        "roles": {},
+        "role_wins": {},
         "rounds_played": 0,
         "kills": 0,
         "deaths": 0,
@@ -24,6 +27,33 @@ def _new_row(puuid: str) -> dict:
         "multikill_rounds": 0,
         "clutches": 0,
     }
+
+
+def _normalize_role(agent_name: str | None) -> str | None:
+    if not agent_name:
+        return None
+    key = agent_name.lower().replace("-", "").replace(" ", "")
+    if key in {"jett", "reyna", "raze", "phoenix", "yoru", "neon", "iso", "waylay"}:
+        return "Duelist"
+    if key in {"omen", "brimstone", "viper", "astra", "harbor", "clove"}:
+        return "Controller"
+    if key in {"sova", "skye", "breach", "kay/o", "gekko", "fade", "tejo"}:
+        return "Initiator"
+    if key in {"cypher", "killjoy", "chamber", "sage", "deadlock", "vyse", "veto"}:
+        return "Sentinel"
+    return None
+
+
+def _ordered_stats(counter: dict[str, int], win_counter: dict[str, int]) -> list[dict]:
+    return [
+        {
+            "name": name,
+            "games": n,
+            "wins": win_counter.get(name, 0),
+            "win_rate": pct(win_counter.get(name, 0), n),
+        }
+        for name, n in sorted(counter.items(), key=lambda kv: (-kv[1], kv[0]))
+    ]
 
 
 def compute_players(
@@ -42,7 +72,15 @@ def compute_players(
             if not row["card"] and p.customization.card:
                 row["card"] = p.customization.card
             if p.agent.name:
-                row["agents"][p.agent.name] = row["agents"].get(p.agent.name, 0) + 1
+                agent_name = p.agent.name
+                row["agents"][agent_name] = row["agents"].get(agent_name, 0) + 1
+                if ctx.team_won:
+                    row["agent_wins"][agent_name] = row["agent_wins"].get(agent_name, 0) + 1
+                role_name = _normalize_role(agent_name)
+                if role_name:
+                    row["roles"][role_name] = row["roles"].get(role_name, 0) + 1
+                    if ctx.team_won:
+                        row["role_wins"][role_name] = row["role_wins"].get(role_name, 0) + 1
             row["rounds_played"] += rounds_count
             row["kills"] += p.stats.kills
             row["deaths"] += p.stats.deaths
@@ -78,10 +116,7 @@ def compute_players(
         row["kd"] = round(safe_div(row["kills"], row["deaths"], default=float(row["kills"])), 2)
         row["kast"] = pct(row["kast_rounds"], rp)
         row["hs_pct"] = pct(row["headshots"], shots)
-        # Sort agents by games played into an ordered list.
-        row["agents"] = [
-            {"name": name, "games": n}
-            for name, n in sorted(row["agents"].items(), key=lambda kv: -kv[1])
-        ]
+        row["agents"] = _ordered_stats(row["agents"], row["agent_wins"])
+        row["roles"] = _ordered_stats(row["roles"], row["role_wins"])
 
     return rows

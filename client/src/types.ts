@@ -1,5 +1,12 @@
 // Loose types mirroring the backend report shape (server/app/analytics/report.py).
 
+export interface PlayerUsageStat {
+  name: string;
+  games: number;
+  wins?: number;
+  win_rate?: number;
+}
+
 export interface PlayerRow {
   puuid: string;
   name: string;
@@ -15,7 +22,8 @@ export interface PlayerRow {
   hs_pct: number;
   multikill_rounds: number;
   clutches: number;
-  agents: { name: string; games: number }[];
+  agents: PlayerUsageStat[];
+  roles: PlayerUsageStat[];
 }
 
 export interface MvpEntry {
