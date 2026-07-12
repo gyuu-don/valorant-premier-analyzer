@@ -104,6 +104,13 @@ def test_players(data):
     assert p["p1"]["acs"] == 2500.0
     assert p["p1"]["kills"] == 20
     assert p["p1"]["agents"][0]["name"] == "Jett"
+    assert p["p1"]["agents"][0]["games"] == 1
+    assert p["p1"]["agents"][0]["wins"] == 1
+    assert p["p1"]["agents"][0]["win_rate"] == 100.0
+    assert p["p1"]["roles"][0]["name"] == "Duelist"
+    assert p["p1"]["roles"][0]["games"] == 1
+    assert p["p1"]["roles"][0]["wins"] == 1
+    assert p["p1"]["roles"][0]["win_rate"] == 100.0
 
 
 def test_mvp(data):

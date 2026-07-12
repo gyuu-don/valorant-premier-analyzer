@@ -15,7 +15,7 @@ export default function MapsAgents() {
   const { data, isLoading, error } = useReport();
   const prev = usePreviousReport();
   const { season } = useSeason();
-  const agentIcons = useQuery({ queryKey: ["agent-icons"], queryFn: fetchAgentIcons, staleTime: Infinity });
+  const iconData = useQuery({ queryKey: ["agent-icons"], queryFn: fetchAgentIcons, staleTime: Infinity });
   const mapsCal = useQuery({ queryKey: ["maps-cal"], queryFn: fetchMaps, staleTime: Infinity });
   const mapDetail = useQuery({ queryKey: ["map-detail", season], queryFn: () => fetchMapDetail(season) });
   const [selectedMap, setSelectedMap] = useState<string>(ALL);
@@ -23,7 +23,7 @@ export default function MapsAgents() {
   if (isLoading) return <Loading />;
   if (error) return <ErrorBox error={error} />;
 
-  const icons = agentIcons.data;
+  const icons = iconData.data?.agentIcons;
   const maps = Object.entries(data?.maps ?? {});
   const roster = (data?.players ?? []).map((p) => ({ puuid: p.puuid, name: p.name }));
 
