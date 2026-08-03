@@ -69,11 +69,11 @@ class Settings(BaseSettings):
 # breakdown everywhere (the client iterates the weights object's keys).
 MVP_WEIGHTS: dict[str, float] = {
     "kast": 0.22,                # kill/assist/survive/trade consistency
-    "entry_win_rate": 0.13,      # opening-duel success
     "adr": 0.15,                 # average damage per round
     "trade_contribution": 0.15,  # trades secured minus own untraded deaths
-    "multikills": 0.10,          # 2k+ rounds
     "clutches": 0.15,            # last-alive round wins
+    "entry_win_rate": 0.13,      # opening-duel success
+    "multikills": 0.10,          # 2k+ rounds
     "acs": 0.10,                 # average combat score per round
 }
 
