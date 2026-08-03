@@ -127,7 +127,22 @@ body {
 .agent-face-sm.agent-face-ph { display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; }
 
 /* Player card (banner) on the profile widget. */
-.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.profile-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.profile-head-main { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1 1 280px; }
+.profile-role-block {
+  display: flex; align-items: center; gap: 10px; margin-left: auto; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2);
+  flex-wrap: wrap; justify-content: flex-end;
+}
+.profile-role-icons { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+.profile-role-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.profile-role-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; }
+.profile-role-text { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-end; }
+.profile-role-text strong { font-size: 1rem; }
+.profile-role-text .subtle { font-size: 0.95rem; }
 .player-card-lg {
   width: 72px; height: 72px; border-radius: 10px; object-fit: cover; flex: none;
   background: var(--panel-2); border: 1px solid var(--border);
@@ -186,6 +201,9 @@ body {
   width: 56px; height: 56px; border-radius: 10px; overflow: hidden; flex: none;
   background: var(--panel-2); display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border);
+}
+.agent-face.agent-face-role {
+  width: 42px; height: 42px; border-radius: 8px;
 }
 .agent-face img { width: 100%; height: 100%; object-fit: cover; }
 .agent-face-ph { font-weight: 800; color: var(--muted); font-size: 1.25rem; }
@@ -479,7 +497,7 @@ code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 .pc-agent { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); background: var(--panel-2); flex: none; }
 .pc-agent-ph { display: inline-flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 800; color: var(--muted); }
 .pc-title { flex: 1; }
-.pc-name { font-size: 1.5rem; font-weight: 800; }
+.pc-name { font-size: 1.5rem; font-weight: 800; flex-grow: 1; }
 .pc-impact { text-align: right; }
 .pc-impact-val { font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
 .pc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }

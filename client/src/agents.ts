@@ -11,6 +11,11 @@ export interface AgentInfo {
   abilities: Record<string, AgentAbility>;
 }
 
+export interface IconLookup {
+  agentIcons: Record<string, string>;
+  roleIcons: Record<string, string>;
+}
+
 // valorant-api slot -> match ability_casts key
 const SLOT_MAP: Record<string, string> = {
   Grenade: "grenade",
@@ -36,15 +41,19 @@ export async function fetchAgents(): Promise<Record<string, AgentInfo>> {
   return map;
 }
 
-export async function fetchAgentIcons(): Promise<Record<string, string>> {
+export async function fetchAgentIcons(): Promise<IconLookup> {
   const res = await fetch("https://valorant-api.com/v1/agents?isPlayableCharacter=true");
   if (!res.ok) throw new Error(`agents fetch failed: ${res.status}`);
   const body = await res.json();
-  const map: Record<string, string> = {};
+  const agentIcons: Record<string, string> = {};
+  const roleIcons: Record<string, string> = {};
   for (const a of body.data ?? []) {
     if (a.displayName && a.displayIcon) {
-      map[a.displayName.toLowerCase()] = a.displayIcon;
+      agentIcons[a.displayName.toLowerCase()] = a.displayIcon;
+    }
+    if (a.role?.displayName && a.role?.displayIcon) {
+      roleIcons[a.role.displayName.toLowerCase()] = a.role.displayIcon;
     }
   }
-  return map;
+  return { agentIcons, roleIcons };
 }

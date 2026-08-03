@@ -1,14 +1,10 @@
 import { useState } from "react";
-import {
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-} from "recharts";
-import { useQuery } from "@tanstack/react-query";
 import { useReport } from "../hooks";
-import { fetchAgentIcons } from "../agents";
 import { ErrorBox, InfoLabel, Loading, Section } from "../components/common";
 import { TeamMvpSection } from "../components/mvp";
 import { playerCardImage } from "../media";
 import type { PlayerRow } from "../types";
+import PlayerProfileSection from "../features/PlayerProfileSection";
 
 const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
   { key: "acs", label: "ACS", info: "acs" },
@@ -20,19 +16,8 @@ const COLS: { key: keyof PlayerRow; label: string; info: string }[] = [
   { key: "clutches", label: "Clutches", info: "clutches" },
 ];
 
-// Rough per-metric maxima used to scale the radar to 0..100.
-const RADAR_MAX: Record<string, number> = {
-  ACS: 300, "K/D": 2, ADR: 200, "KAST%": 100, "HS%": 40,
-};
-
-
 export default function Players() {
   const { data, isLoading, error } = useReport();
-  const agentIcons = useQuery({
-    queryKey: ["agent-icons"],
-    queryFn: fetchAgentIcons,
-    staleTime: Infinity,
-  });
   const [selected, setSelected] = useState<string | null>(null);
   if (isLoading) return <Loading />;
   if (error) return <ErrorBox error={error} />;
@@ -40,13 +25,6 @@ export default function Players() {
   if (players.length === 0) return <div className="notice">No player data.</div>;
 
   const active = players.find((p) => p.puuid === selected) ?? players[0];
-  const radarData = [
-    { metric: "ACS", v: scale(active.acs, RADAR_MAX["ACS"]) },
-    { metric: "K/D", v: scale(active.kd, RADAR_MAX["K/D"]) },
-    { metric: "ADR", v: scale(active.adr, RADAR_MAX["ADR"]) },
-    { metric: "KAST%", v: active.kast },
-    { metric: "HS%", v: scale(active.hs_pct, RADAR_MAX["HS%"]) },
-  ];
 
   return (
     <div className="page">
@@ -83,77 +61,8 @@ export default function Players() {
         <p className="hint">Click a player to see their profile.</p>
       </Section>
 
-      <Section title={`Profile — ${active.name}`}>
-        <div className="profile-head">
-          {playerCardImage(active.card)
-            ? <img className="player-card-lg" src={playerCardImage(active.card)!} alt={active.name} />
-            : <span className="player-card-lg player-card-ph">{active.name[0]}</span>}
-          <div>
-            <div className="pc-name">{active.name}</div>
-            <div className="subtle">{active.agents.map((a) => a.name).slice(0, 3).join(", ")}</div>
-          </div>
-        </div>
-        <div className="profile">
-          <div className="radar-wrap">
-            <ResponsiveContainer width="100%" height={260}>
-              <RadarChart data={radarData} outerRadius="75%">
-                <PolarGrid stroke="#333" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: "#aab", fontSize: 12 }} />
-                <Radar dataKey="v" stroke="#ff4655" fill="#ff4655" fillOpacity={0.4} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="profile-stats">
-            <div><span>Kills / Deaths / Assists</span><strong>{active.kills} / {active.deaths} / {active.assists}</strong></div>
-            <div><span>Rounds played</span><strong>{active.rounds_played}</strong></div>
-            <div><span>Multikill rounds</span><strong>{active.multikill_rounds}</strong></div>
-            <div><span>Clutches</span><strong>{active.clutches}</strong></div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Agents played" note="Pick rate = share of this player's games on each agent.">
-        <AgentUsage agents={active.agents} icons={agentIcons.data} />
-      </Section>
+      <PlayerProfileSection player={active} />
     </div>
   );
 }
 
-function AgentUsage({
-  agents,
-  icons,
-}: {
-  agents: { name: string; games: number }[];
-  icons?: Record<string, string>;
-}) {
-  if (!agents || agents.length === 0) return <div className="subtle">No agent data.</div>;
-  const total = agents.reduce((s, a) => s + a.games, 0) || 1;
-  return (
-    <div className="agent-usage">
-      {agents.map((a) => {
-        const pct = Math.round((100 * a.games) / total);
-        const icon = icons?.[a.name.toLowerCase()];
-        return (
-          <div className="agent-row" key={a.name}>
-            <div className="agent-face">
-              {icon ? <img src={icon} alt={a.name} loading="lazy" /> : <span className="agent-face-ph">{a.name[0]}</span>}
-            </div>
-            <div className="agent-meta">
-              <div className="agent-name">
-                {a.name} <span className="subtle">· {a.games} {a.games === 1 ? "game" : "games"}</span>
-              </div>
-              <div className="pick">
-                <div className="pick-bar"><div className="pick-fill" style={{ width: `${pct}%` }} /></div>
-                <span className="pick-pct">{pct}%</span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function scale(v: number, max: number) {
-  return Math.round(Math.min(100, (100 * v) / max));
-}
