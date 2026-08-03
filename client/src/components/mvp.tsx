@@ -5,7 +5,7 @@ import type { MvpEntry, Report } from "../types";
 // Ordered greatest → least by weight (matches config.MVP_WEIGHTS).
 export const COMPONENT_LABELS: Record<string, string> = {
   kast: "KAST",
-  entry_win_rate: "Entry win %",
+  entry_win_rate: "First engagement win %",
   adr: "ADR",
   trade_contribution: "Trade contribution",
   multikills: "Multikills",

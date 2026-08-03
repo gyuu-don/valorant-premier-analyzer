@@ -37,7 +37,7 @@ export const STAT_INFO: Record<string, StatDef> = {
     desc: "Share of rounds where your team won the first kill of the round (first blood for vs against).",
   },
   entry_win_rate: {
-    label: "Entry win %",
+    label: "First engagement win %",
     desc: "A player's first-engagement success: first kills ÷ (first kills + first deaths).",
   },
   first_kills: { label: "First kills", desc: "Times the player secured the round's first kill." },

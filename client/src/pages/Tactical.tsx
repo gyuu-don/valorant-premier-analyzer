@@ -77,7 +77,7 @@ export default function Tactical() {
             <th>Player</th>
             <th><InfoLabel k="first_kills">First kills</InfoLabel></th>
             <th><InfoLabel k="first_deaths">First deaths</InfoLabel></th>
-            <th><InfoLabel k="entry_win_rate">Entry win %</InfoLabel></th>
+            <th><InfoLabel k="entry_win_rate">First engagement win %</InfoLabel></th>
           </tr></thead>
           <tbody>
             {Object.entries(entries?.per_player ?? {}).map(([puuid, e]) => (
