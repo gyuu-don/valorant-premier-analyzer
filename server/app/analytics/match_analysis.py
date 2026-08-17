@@ -1,8 +1,10 @@
 """Per-match ("single game") analytics powering the Match Analysis player card + MVP widget.
 
 Builds a context for both teams, computes per-player stats for all 10 players, and a
-match-scoped impact rating normalized across the whole lobby (so any clicked player has a
-comparable number). The team-MVP widget filters the ranking to our side on the client.
+match-scoped impact rating normalized within each player's own roster (so a rating always
+reads as "how this player compared to their four teammates this game", matching the
+stage-level report). Every player still gets a number; ratings are not comparable across
+teams. The team-MVP widget uses our roster's ranking.
 
 Utility here is per-round *usage* only (per-match `ability_casts` ÷ rounds), by slot —
 there are no ability-cast timestamps, so no kill/assist correlation is possible.
@@ -120,6 +122,7 @@ def build_match_analysis(
 
     rounds_count = max(len(match.rounds), 1)
     players_all: dict[str, dict] = {}
+    rows_by_team: dict[str, dict[str, dict]] = {}
     entries_pp: dict[str, dict] = {}
     trades_pp: dict[str, dict] = {}
     contexts_by_team: dict[str, object] = {}
@@ -154,17 +157,24 @@ def build_match_analysis(
                 "total_per_round": round(sum(casts.values()) / rounds_count, 2),
             }
             players_all[puuid] = row
+        rows_by_team[tid] = rows
 
     if not players_all:
         return {"our_team_id": our_team_id, "players": [], "mvp": None}
 
-    # Impact rating normalized across the whole lobby.
-    mvp = compute_mvp(
-        players_all,
-        {"per_player": entries_pp},
-        {"per_player": trades_pp},
-    )
-    rating_by = {r["puuid"]: r for r in mvp["ranking"]}
+    # Impact rating normalized within each roster, not across the lobby: min-max over a
+    # player's own four teammates. entries_pp / trades_pp are lobby-wide, but compute_mvp
+    # only reads the puuids in the roster it is given.
+    mvp_by_team = {
+        tid: compute_mvp(rows, {"per_player": entries_pp}, {"per_player": trades_pp})
+        for tid, rows in rows_by_team.items()
+    }
+    rating_by = {
+        r["puuid"]: r for m in mvp_by_team.values() for r in m["ranking"]
+    }
+    # Only our roster's ranking is meaningful as a single list — cross-team ratings share
+    # no scale. None when we can't tell which side is ours (the widget hides itself then).
+    mvp = mvp_by_team.get(our_team_id) if our_team_id else None
 
     for puuid, row in players_all.items():
         e = entries_pp.get(puuid, {})

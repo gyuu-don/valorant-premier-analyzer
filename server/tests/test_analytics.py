@@ -139,7 +139,16 @@ def test_build_match_analysis(match):
     assert a is not None
     assert a["our_team_id"] == "Red"
     assert len(a["players"]) == 10                       # both teams
-    assert a["mvp"] is not None and len(a["mvp"]["ranking"]) == 10
+    # The MVP ranking is our roster only, normalized within it.
+    assert a["mvp"] is not None and len(a["mvp"]["ranking"]) == 5
+    assert {r["puuid"] for r in a["mvp"]["ranking"]} == {"p1", "p2", "p3", "p4", "p5"}
+    # Opponents are rated too, but against their own roster: each side has a top-rated
+    # player at 100 (best on every component would be needed for exactly 100, so just
+    # check both sides are scaled independently).
+    ours = [p["impact_rating"] for p in a["players"] if p["team"] == "Red"]
+    theirs = [p["impact_rating"] for p in a["players"] if p["team"] == "Blue"]
+    assert all(r is not None for r in ours + theirs)
+    assert max(ours) > 0 and max(theirs) > 0
 
     p1 = next(p for p in a["players"] if p["puuid"] == "p1")
     # ability_casts grenade 6 over 2 rounds -> 3.0/round; total (6+8+4+2)=20 -> 10.0/round.
