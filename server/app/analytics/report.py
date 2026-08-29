@@ -116,9 +116,20 @@ def compute_map_detail(contexts) -> dict:
             d["positions"][key].extend(pos[key])
         for p in ctx.our_players():
             if p.agent.name:
-                a = d["_agents"].setdefault(p.agent.name, {"games": 0, "wins": 0})
+                agent_key = p.agent.name
+                a = d["_agents"].setdefault(
+                    agent_key,
+                    {"games": 0, "wins": 0, "_players": {}, "_player_names": {}, "_wins": {}, "_win_names": {}},
+                )
                 a["games"] += 1
                 a["wins"] += int(ctx.team_won)
+                player_key = p.puuid or p.display_name or p.name
+                if player_key:
+                    a["_players"][player_key] = a["_players"].get(player_key, 0) + 1
+                    a["_player_names"][player_key] = p.display_name or p.name or player_key
+                    if ctx.team_won:
+                        a["_wins"][player_key] = a["_wins"].get(player_key, 0) + 1
+                        a["_win_names"][player_key] = p.display_name or p.name or player_key
 
     # Group round breakdowns by map for per-map site stats
     map_rounds: dict[str, list[tuple]] = {}
@@ -128,10 +139,19 @@ def compute_map_detail(contexts) -> dict:
 
     out: dict[str, dict] = {}
     for name, d in detail.items():
-        agents = {
-            an: {"games": v["games"], "wins": v["wins"], "win_rate": pct(v["wins"], v["games"])}
-            for an, v in sorted(d["_agents"].items(), key=lambda kv: -kv[1]["games"])
-        }
+        agents = {}
+        for an, v in sorted(d["_agents"].items(), key=lambda kv: -kv[1]["games"]):
+            player_counts = v.get("_players", {})
+            player_names = v.get("_player_names", {})
+            win_counts = v.get("_wins", {})
+            win_names = v.get("_win_names", {})
+            agents[an] = {
+                "games": v["games"],
+                "wins": v["wins"],
+                "win_rate": pct(v["wins"], v["games"]),
+                "most_played_by": _leader(player_counts, player_names),
+                "most_wins_by": _wins_leader(win_counts, win_names),
+            }
         # Compute per-map site stats
         site_data = compute_sites(map_rounds.get(name, []))
         out[name] = {
@@ -140,6 +160,20 @@ def compute_map_detail(contexts) -> dict:
             "sites": site_data,
         }
     return out
+
+
+def _leader(counter: dict[str, int], names: dict[str, str]) -> dict | None:
+    if not counter:
+        return None
+    player, count = max(counter.items(), key=lambda kv: (kv[1], -ord(kv[0][0]) if kv[0] else 0))
+    return {"player": names.get(player, player), "games": count}
+
+
+def _wins_leader(counter: dict[str, int], names: dict[str, str]) -> dict | None:
+    if not counter:
+        return None
+    player, wins = max(counter.items(), key=lambda kv: (kv[1], -ord(kv[0][0]) if kv[0] else 0))
+    return {"player": names.get(player, player), "wins": wins}
 
 
 def build_map_detail(team: PremierTeam, matches: list[MatchV4]) -> dict:

@@ -31,33 +31,35 @@ export default function Players() {
       <div className="page-head"><h1>Player Performance</h1></div>
       {data?.mvp && <TeamMvpSection mvp={data.mvp} />}
       <Section title="Roster stats">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              {COLS.map((c) => <th key={c.label}><InfoLabel k={c.info}>{c.label}</InfoLabel></th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((p) => (
-              <tr
-                key={p.puuid}
-                className={p.puuid === active.puuid ? "selected" : ""}
-                onClick={() => setSelected(p.puuid)}
-              >
-                <td className="name-cell">
-                  <span className="agent-inline">
-                    {playerCardImage(p.card)
-                      ? <img className="agent-face-sm" src={playerCardImage(p.card)!} alt="" loading="lazy" />
-                      : <span className="agent-face-sm agent-face-ph">{p.name[0]}</span>}
-                    {p.name}
-                  </span>
-                </td>
-                {COLS.map((c) => <td key={c.label}>{p[c.key] as number}</td>)}
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                {COLS.map((c) => <th key={c.label}><InfoLabel k={c.info}>{c.label}</InfoLabel></th>)}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {players.map((p) => (
+                <tr
+                  key={p.puuid}
+                  className={p.puuid === active.puuid ? "selected" : ""}
+                  onClick={() => setSelected(p.puuid)}
+                >
+                  <td className="name-cell">
+                    <span className="agent-inline">
+                      {playerCardImage(p.card)
+                        ? <img className="agent-face-sm" src={playerCardImage(p.card)!} alt="" loading="lazy" />
+                        : <span className="agent-face-sm agent-face-ph">{p.name[0]}</span>}
+                      {p.name}
+                    </span>
+                  </td>
+                  {COLS.map((c) => <td key={c.label}>{p[c.key] as number}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p className="hint">Click a player to see their profile.</p>
       </Section>
 

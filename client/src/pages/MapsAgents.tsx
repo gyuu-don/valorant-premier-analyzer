@@ -120,34 +120,42 @@ export default function MapsAgents() {
         {agents.length === 0 ? (
           <div className="subtle">No agent data{selectedMap === ALL ? "" : ` for ${selectedMap}`}.</div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th><InfoLabel k="games">Games</InfoLabel></th>
-                <th className="wr-col"><InfoLabel k="win_rate">Win rate</InfoLabel></th>
-              </tr>
-            </thead>
-            <tbody>
-              {agents.map(([name, a]) => {
-                const icon = icons?.[name.toLowerCase()];
-                return (
-                  <tr key={name}>
-                    <td className="name-cell">
-                      <span className="agent-inline">
-                        {icon
-                          ? <img className="agent-face-sm" src={icon} alt={name} loading="lazy" />
-                          : <span className="agent-face-sm agent-face-ph">{name[0]}</span>}
-                        {name}
-                      </span>
-                    </td>
-                    <td>{a.games}</td>
-                    <td className="wr-col"><WinRateBar pct={a.win_rate} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th><InfoLabel k="games">Games</InfoLabel></th>
+                  <th className="wr-col"><InfoLabel k="win_rate">Win rate</InfoLabel></th>
+                  <th>Most played by</th>
+                  <th>Most wins by</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map(([name, a]) => {
+                  const icon = icons?.[name.toLowerCase()];
+                  const mostPlayed = a.most_played_by;
+                  const mostWins = a.most_wins_by;
+                  return (
+                    <tr key={name}>
+                      <td className="name-cell">
+                        <span className="agent-inline">
+                          {icon
+                            ? <img className="agent-face-sm" src={icon} alt={name} loading="lazy" />
+                            : <span className="agent-face-sm agent-face-ph">{name[0]}</span>}
+                          {name}
+                        </span>
+                      </td>
+                      <td>{a.games}</td>
+                      <td className="wr-col"><WinRateBar pct={a.win_rate} /></td>
+                      <td>{mostPlayed ? `${mostPlayed.player} (${mostPlayed.games})` : "—"}</td>
+                      <td>{mostWins ? `${mostWins.player} (${mostWins.wins})` : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </Section>
     </div>
