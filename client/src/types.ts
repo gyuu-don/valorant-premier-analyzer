@@ -110,7 +110,7 @@ export interface MapDetail {
     string,
     {
       positions: NonNullable<MatchAnalysis["positions"]>;
-      agents: Record<string, { games: number; wins: number; win_rate: number }>;
+      agents: Record<string, { games: number; wins: number; win_rate: number; most_played_by?: { player: string; games: number } | null; most_wins_by?: { player: string; wins: number } | null }>;
       sites: {
         defense: {
           round_win_rate: number;
@@ -219,7 +219,7 @@ export interface Report {
     per_player: Record<string, any>;
   };
   maps?: Record<string, { games: number; wins: number; win_rate: number; attack_round_win_rate: number; defense_round_win_rate: number }>;
-  agents?: Record<string, { games: number; wins: number; win_rate: number }>;
+  agents?: Record<string, { games: number; wins: number; win_rate: number; most_played_by?: { player: string; games: number } | null; most_wins_by?: { player: string; wins: number } | null }>;
   players?: PlayerRow[];
   mvp?: {
     ranking: MvpEntry[];

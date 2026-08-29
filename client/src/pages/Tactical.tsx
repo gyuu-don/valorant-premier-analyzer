@@ -72,49 +72,53 @@ export default function Tactical() {
       </div>
 
       <Section title="Entry duels by player">
-        <table className="data-table">
-          <thead><tr>
-            <th>Player</th>
-            <th><InfoLabel k="first_kills">First kills</InfoLabel></th>
-            <th><InfoLabel k="first_deaths">First deaths</InfoLabel></th>
-            <th><InfoLabel k="entry_win_rate">First engagement win %</InfoLabel></th>
-          </tr></thead>
-          <tbody>
-            {Object.entries(entries?.per_player ?? {}).map(([puuid, e]) => (
-              <tr key={puuid}>
-                <td className="name-cell">{nameOf(data, puuid)}</td>
-                <td>{e.first_kills}</td>
-                <td>{e.first_deaths}</td>
-                <td>{e.entry_win_rate}% {dl(e.entry_win_rate, prevData?.entries?.per_player?.[puuid]?.entry_win_rate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr>
+              <th>Player</th>
+              <th><InfoLabel k="first_kills">First kills</InfoLabel></th>
+              <th><InfoLabel k="first_deaths">First deaths</InfoLabel></th>
+              <th><InfoLabel k="entry_win_rate">First engagement win %</InfoLabel></th>
+            </tr></thead>
+            <tbody>
+              {Object.entries(entries?.per_player ?? {}).map(([puuid, e]) => (
+                <tr key={puuid}>
+                  <td className="name-cell">{nameOf(data, puuid)}</td>
+                  <td>{e.first_kills}</td>
+                  <td>{e.first_deaths}</td>
+                  <td>{e.entry_win_rate}% {dl(e.entry_win_rate, prevData?.entries?.per_player?.[puuid]?.entry_win_rate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       <Section title="Trades by player" note="Traded % is over tradeable deaths only — last-man-standing deaths (nobody alive to trade) are excluded.">
-        <table className="data-table">
-          <thead><tr>
-            <th>Player</th>
-            <th><InfoLabel k="deaths">Deaths</InfoLabel></th>
-            <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
-            <th>Deaths traded</th>
-            <th><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
-            <th><InfoLabel k="trade_kills">Trade kills</InfoLabel></th>
-          </tr></thead>
-          <tbody>
-            {Object.entries(trades?.per_player ?? {}).map(([puuid, t]) => (
-              <tr key={puuid}>
-                <td className="name-cell">{nameOf(data, puuid)}</td>
-                <td>{t.deaths}</td>
-                <td>{t.tradeable_deaths}</td>
-                <td>{t.deaths_traded}</td>
-                <td>{t.deaths_traded_rate}% {dl(t.deaths_traded_rate, prevData?.trades?.per_player?.[puuid]?.deaths_traded_rate)}</td>
-                <td>{t.trade_kills}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr>
+              <th>Player</th>
+              <th><InfoLabel k="deaths">Deaths</InfoLabel></th>
+              <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
+              <th>Deaths traded</th>
+              <th><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
+              <th><InfoLabel k="trade_kills">Trade kills</InfoLabel></th>
+            </tr></thead>
+            <tbody>
+              {Object.entries(trades?.per_player ?? {}).map(([puuid, t]) => (
+                <tr key={puuid}>
+                  <td className="name-cell">{nameOf(data, puuid)}</td>
+                  <td>{t.deaths}</td>
+                  <td>{t.tradeable_deaths}</td>
+                  <td>{t.deaths_traded}</td>
+                  <td>{t.deaths_traded_rate}% {dl(t.deaths_traded_rate, prevData?.trades?.per_player?.[puuid]?.deaths_traded_rate)}</td>
+                  <td>{t.trade_kills}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       {trades?.by_phase && (
@@ -122,27 +126,29 @@ export default function Tactical() {
           title="Trades by game state"
           note="Subsets of the overall trade rate. Defense holds are expected to run lower — site anchors often die solo by design, so read that row as context rather than a failure."
         >
-          <table className="data-table">
-            <thead><tr>
-              <th>Phase</th>
-              <th>Traded</th>
-              <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
-              <th className="wr-col"><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
-            </tr></thead>
-            <tbody>
-              {TRADE_PHASES.map(({ key, slug }) => {
-                const v = trades.by_phase![key] ?? { tradeable: 0, traded: 0, rate: 0 };
-                return (
-                  <tr key={key}>
-                    <td className="name-cell"><InfoLabel k={slug} /></td>
-                    <td>{v.traded}</td>
-                    <td>{v.tradeable}</td>
-                    <td className="wr-col"><WinRateCell pct={v.rate} delta={dl(v.rate, prevData?.trades?.by_phase?.[key]?.rate)} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr>
+                <th>Phase</th>
+                <th>Traded</th>
+                <th><InfoLabel k="tradeable_deaths">Tradeable</InfoLabel></th>
+                <th className="wr-col"><InfoLabel k="deaths_traded_rate">Traded %</InfoLabel></th>
+              </tr></thead>
+              <tbody>
+                {TRADE_PHASES.map(({ key, slug }) => {
+                  const v = trades.by_phase![key] ?? { tradeable: 0, traded: 0, rate: 0 };
+                  return (
+                    <tr key={key}>
+                      <td className="name-cell"><InfoLabel k={slug} /></td>
+                      <td>{v.traded}</td>
+                      <td>{v.tradeable}</td>
+                      <td className="wr-col"><WinRateCell pct={v.rate} delta={dl(v.rate, prevData?.trades?.by_phase?.[key]?.rate)} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Section>
       )}
     </div>

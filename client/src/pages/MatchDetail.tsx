@@ -185,35 +185,37 @@ function MatchView({ data }: { data: any }) {
       {tab === "scoreboard" && (
         <>
           <Section title={`${mapName || "Match"} — scoreboard`} note="Click a player for their game breakdown.">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Player</th><th>Team</th><th>Agent</th>
-                  <th><InfoLabel k="kills">K</InfoLabel></th>
-                  <th><InfoLabel k="deaths">D</InfoLabel></th>
-                  <th><InfoLabel k="assists">A</InfoLabel></th>
-                  <th><InfoLabel k="score">Score</InfoLabel></th>
-                </tr>
-              </thead>
-              <tbody>
-                {players.map((p: any) => (
-                  <tr
-                    key={p.puuid}
-                    className={p.puuid === selectedPuuid ? "selected" : ""}
-                    onClick={() => selectPlayer(p.puuid)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td className="name-cell">{p.name}#{p.tag}</td>
-                    <td className={`team-${(p.team_id ?? "").toLowerCase()}`}>{p.team_id}</td>
-                    <td>{p.agent?.name}</td>
-                    <td>{p.stats?.kills}</td>
-                    <td>{p.stats?.deaths}</td>
-                    <td>{p.stats?.assists}</td>
-                    <td>{p.stats?.score}</td>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Player</th><th>Team</th><th>Agent</th>
+                    <th><InfoLabel k="kills">K</InfoLabel></th>
+                    <th><InfoLabel k="deaths">D</InfoLabel></th>
+                    <th><InfoLabel k="assists">A</InfoLabel></th>
+                    <th><InfoLabel k="score">Score</InfoLabel></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {players.map((p: any) => (
+                    <tr
+                      key={p.puuid}
+                      className={p.puuid === selectedPuuid ? "selected" : ""}
+                      onClick={() => selectPlayer(p.puuid)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td className="name-cell">{p.name}#{p.tag}</td>
+                      <td className={`team-${(p.team_id ?? "").toLowerCase()}`}>{p.team_id}</td>
+                      <td>{p.agent?.name}</td>
+                      <td>{p.stats?.kills}</td>
+                      <td>{p.stats?.deaths}</td>
+                      <td>{p.stats?.assists}</td>
+                      <td>{p.stats?.score}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Section>
 
           <Section title="Round-by-round">
@@ -364,21 +366,23 @@ function SiteTendencies({ st }: { st: NonNullable<MatchAnalysis["site_tendencies
           {attack.length === 0 ? (
             <div className="subtle">No attack plants this match.</div>
           ) : (
-            <table className="data-table">
-              <thead><tr>
-                <th>Site</th><th>Plants</th>
-                <th><InfoLabel k="plant_site_dist">Share</InfoLabel></th>
-                <th className="wr-col"><InfoLabel k="site_win_rate">Win rate</InfoLabel></th>
-              </tr></thead>
-              <tbody>
-                {attack.map(([s, v]) => (
-                  <tr key={s}>
-                    <td className="name-cell">{s}</td><td>{v.plants}</td><td>{v.share}%</td>
-                    <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr>
+                  <th>Site</th><th>Plants</th>
+                  <th><InfoLabel k="plant_site_dist">Share</InfoLabel></th>
+                  <th className="wr-col"><InfoLabel k="site_win_rate">Win rate</InfoLabel></th>
+                </tr></thead>
+                <tbody>
+                  {attack.map(([s, v]) => (
+                    <tr key={s}>
+                      <td className="name-cell">{s}</td><td>{v.plants}</td><td>{v.share}%</td>
+                      <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
         <div>
@@ -386,20 +390,22 @@ function SiteTendencies({ st }: { st: NonNullable<MatchAnalysis["site_tendencies
           {retake.length === 0 ? (
             <div className="subtle">No enemy plants on defense this match.</div>
           ) : (
-            <table className="data-table">
-              <thead><tr>
-                <th>Site</th><th>Enemy plants</th>
-                <th className="wr-col"><InfoLabel k="retake_by_site">Retake win rate</InfoLabel></th>
-              </tr></thead>
-              <tbody>
-                {retake.map(([s, v]) => (
-                  <tr key={s}>
-                    <td className="name-cell">{s}</td><td>{v.opportunities}</td>
-                    <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr>
+                  <th>Site</th><th>Enemy plants</th>
+                  <th className="wr-col"><InfoLabel k="retake_by_site">Retake win rate</InfoLabel></th>
+                </tr></thead>
+                <tbody>
+                  {retake.map(([s, v]) => (
+                    <tr key={s}>
+                      <td className="name-cell">{s}</td><td>{v.opportunities}</td>
+                      <td className="wr-col"><WinRateBar pct={v.win_rate} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

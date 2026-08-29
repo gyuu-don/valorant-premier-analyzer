@@ -130,6 +130,8 @@ def test_maps(context):
     assert m["maps"]["Ascent"]["games"] == 1
     assert m["maps"]["Ascent"]["wins"] == 1
     assert "Jett" in m["agents"]
+    assert m["agents"]["Jett"]["most_played_by"]["player"] == "Player1#NA1"
+    assert m["agents"]["Jett"]["most_wins_by"]["player"] == "Player1#NA1"
 
 
 def test_build_match_analysis(match):
